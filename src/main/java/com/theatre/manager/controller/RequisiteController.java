@@ -1,8 +1,10 @@
 package com.theatre.manager.controller;
 
+import com.theatre.manager.dao.ConditionDao;
 import com.theatre.manager.dao.RequisiteDao;
 import com.theatre.manager.entity.Requisite;
-import com.theatre.manager.model.ConditionView;
+import com.theatre.manager.enums.WorkerRole;
+import com.theatre.manager.model.ConditionWithTitle;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -11,166 +13,111 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Controller
+@RequestMapping("/requisites") // общий префикс для всех методов
 public class RequisiteController {
 
     private final RequisiteDao requisiteDao;
+    private final ConditionDao conditionDao;
 
-    public RequisiteController(RequisiteDao requisiteDao) {
+    public RequisiteController(RequisiteDao requisiteDao, ConditionDao conditionDao) {
         this.requisiteDao = requisiteDao;
+        this.conditionDao = conditionDao;
     }
 
-    // ================ СПИСОК РЕКВИЗИТОВ: GET /requisites ================
-    @GetMapping("/requisites")
-    public String listRequisites(Model model, HttpSession session) {
-        // Берём только те поля, что нужны:
+    // Обработка GET /requisites
+    @GetMapping
+    public String listRequisitesAndConditions(Model model, HttpSession session,
+                                              @RequestParam(required = false) String tab) {
+        String roleStr = (String) session.getAttribute("workerRole");
+        model.addAttribute("workerRole", roleStr != null ? roleStr.toLowerCase() : null);
+
+        // Получаем список реквизитов и условий для отображения
         List<Requisite> requisites = requisiteDao.findAllRequisitesSimple();
         model.addAttribute("requisites", requisites);
 
-        String userRole = (String) session.getAttribute("userRole");
-        model.addAttribute("userRole", userRole);
+        List<ConditionWithTitle> conditions = conditionDao.findAllWithRequisiteTitles();
+        model.addAttribute("conditions", conditions);
 
-        return "requisites";  // шаблон requisites.html
+        // Выбираем активную вкладку (requisites или conditions)
+        model.addAttribute("activeTab", "conditions".equals(tab) ? "conditions" : "requisites");
+
+        return "requisites"; // thymeleaf шаблон requisites.html
     }
 
-    @GetMapping("/requisites/add")
+    // Форма добавления нового реквизита (доступно ADMIN и DECORATOR)
+    @GetMapping("/add")
     public String addRequisiteForm(Model model, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (!"ADMIN".equals(userRole) && !"DECORATOR".equals(userRole)) {
+        if (!hasAccess(session, WorkerRole.ADMIN, WorkerRole.DECORATOR)) {
             return "redirect:/requisites?error=access_denied";
         }
-
         model.addAttribute("requisite", new Requisite());
         return "requisite-form";
     }
 
-    @PostMapping("/requisites/save")
+    // Сохранение нового реквизита
+    @PostMapping("/save")
     public String saveRequisite(@ModelAttribute Requisite requisite, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (!"ADMIN".equals(userRole) && !"DECORATOR".equals(userRole)) {
+        if (!hasAccess(session, WorkerRole.ADMIN, WorkerRole.DECORATOR)) {
             return "redirect:/requisites?error=access_denied";
         }
-
         requisiteDao.save(requisite);
         return "redirect:/requisites";
     }
 
-    @GetMapping("/requisites/edit/{id}")
+    // Форма редактирования существующего реквизита
+    @GetMapping("/edit/{id}")
     public String editRequisiteForm(@PathVariable Long id, Model model, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (!"ADMIN".equals(userRole) && !"DECORATOR".equals(userRole)) {
+        if (!hasAccess(session, WorkerRole.ADMIN, WorkerRole.DECORATOR)) {
             return "redirect:/requisites?error=access_denied";
         }
-
         Requisite requisite = requisiteDao.findById(id);
         if (requisite == null) {
             return "redirect:/requisites?error=not_found";
         }
-
         model.addAttribute("requisite", requisite);
         return "requisite-form";
     }
 
-    @PostMapping("/requisites/update")
+    // Обновление реквизита
+    @PostMapping("/update")
     public String updateRequisite(@ModelAttribute Requisite requisite, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (!"ADMIN".equals(userRole) && !"DECORATOR".equals(userRole)) {
+        if (!hasAccess(session, WorkerRole.ADMIN, WorkerRole.DECORATOR)) {
             return "redirect:/requisites?error=access_denied";
         }
-
         requisiteDao.update(requisite);
         return "redirect:/requisites";
     }
 
-    @GetMapping("/requisites/delete/{id}")
+    // Удаление реквизита (только ADMIN)
+    @GetMapping("/delete/{id}")
     public String deleteRequisite(@PathVariable Long id, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (!"ADMIN".equals(userRole)) {
+        if (!hasAccess(session, WorkerRole.ADMIN)) {
             return "redirect:/requisites?error=access_denied";
         }
-
         requisiteDao.deleteById(id);
         return "redirect:/requisites";
     }
 
-    // ============= СПИСОК «СОСТОЯНИЙ»: GET /conditions =============
-    @GetMapping("/conditions")
-    public String listConditions(Model model, HttpSession session) {
-        List<ConditionView> conditions = requisiteDao.findAllConditions();
-        model.addAttribute("conditions", conditions);
+    // Вспомогательный метод для получения роли из сессии
+    private WorkerRole getRoleFromSession(HttpSession session) {
+        Object roleObj = session.getAttribute("workerRole");
+        if (!(roleObj instanceof String)) return null;
 
-        String userRole = (String) session.getAttribute("userRole");
-        model.addAttribute("userRole", userRole);
-
-        return "conditions";
+        try {
+            return WorkerRole.valueOf(((String) roleObj).toUpperCase());
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
-    @GetMapping("/conditions/add")
-    public String addConditionForm(Model model, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (!"ADMIN".equals(userRole) && !"DECORATOR".equals(userRole)) {
-            return "redirect:/conditions?error=access_denied";
+    // Проверка доступа по ролям
+    private boolean hasAccess(HttpSession session, WorkerRole... allowedRoles) {
+        WorkerRole currentRole = getRoleFromSession(session);
+        if (currentRole == null) return false;
+
+        for (WorkerRole allowed : allowedRoles) {
+            if (allowed == currentRole) return true;
         }
-        model.addAttribute("allRequisites", requisiteDao.findAllRequisitesSimple());
-        // model.addAttribute("allConditionTypes", conditionTypeDao.findAll());
-        return "condition-form";
-    }
-
-    @PostMapping("/conditions/save")
-    public String saveCondition(
-            @RequestParam Long requisiteId,
-            @RequestParam Long conditionTypeId,
-            @RequestParam("date") java.util.Date date,
-            HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (!"ADMIN".equals(userRole) && !"DECORATOR".equals(userRole)) {
-            return "redirect:/conditions?error=access_denied";
-        }
-
-        requisiteDao.saveCondition(requisiteId, conditionTypeId, date);
-        return "redirect:/conditions";
-    }
-
-    @GetMapping("/conditions/edit/{id}")
-    public String editConditionForm(@PathVariable Long id, Model model, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (!"ADMIN".equals(userRole) && !"DECORATOR".equals(userRole)) {
-            return "redirect:/conditions?error=access_denied";
-        }
-
-        ConditionView cond = requisiteDao.findConditionById(id);
-        if (cond == null) {
-            return "redirect:/conditions?error=not_found";
-        }
-
-        model.addAttribute("condition", cond);
-        model.addAttribute("allRequisites", requisiteDao.findAllRequisitesSimple());
-        // model.addAttribute("allConditionTypes", conditionTypeDao.findAll());
-        return "condition-form";
-    }
-
-    @PostMapping("/conditions/update")
-    public String updateCondition(
-            @RequestParam Long conditionId,
-            @RequestParam Long conditionTypeId,
-            @RequestParam("date") java.util.Date date,
-            HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (!"ADMIN".equals(userRole) && !"DECORATOR".equals(userRole)) {
-            return "redirect:/conditions?error=access_denied";
-        }
-
-        requisiteDao.updateCondition(conditionId, conditionTypeId, date);
-        return "redirect:/conditions";
-    }
-
-    @GetMapping("/conditions/delete/{id}")
-    public String deleteCondition(@PathVariable Long id, HttpSession session) {
-        String userRole = (String) session.getAttribute("userRole");
-        if (!"ADMIN".equals(userRole)) {
-            return "redirect:/conditions?error=access_denied";
-        }
-
-        requisiteDao.deleteConditionById(id);
-        return "redirect:/conditions";
+        return false;
     }
 }

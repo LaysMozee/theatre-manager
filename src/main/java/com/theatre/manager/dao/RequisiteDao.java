@@ -19,7 +19,6 @@ public class RequisiteDao {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // —————————————   Старый метод для условий   —————————————
     public List<RequisiteView> findAllWithConditions() {
         String sql = """
             SELECT
@@ -42,13 +41,7 @@ public class RequisiteDao {
         view.setConditionTypeTitle(rs.getString("conditionTypeTitle"));
         return view;
     }
-    // —————————————   Конец старого метода   —————————————
 
-    /**
-     * Новый метод: выбираем ровно колонки:
-     *  r.requisite_id, r.title, r.type, r.size, r.available_quantity, r.total_quantity
-     * и мапим их на entity.Requisite.
-     */
     public List<Requisite> findAllRequisitesSimple() {
         String sql = """
             SELECT

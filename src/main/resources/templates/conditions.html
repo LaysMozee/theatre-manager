@@ -15,7 +15,7 @@
     </div>
 
     <!-- Кнопка «Добавить состояние» -->
-    <div th:if="${userRole == 'ADMIN' or userRole == 'DECORATOR'}" class="mb-3">
+    <div th:if="${workerRole == 'admin' or workerRole == 'decorator'}" class="mb-3">
         <a href="/conditions/add" class="btn btn-primary">Добавить состояние</a>
     </div>
 
@@ -38,10 +38,12 @@
             <td th:text="${cond.conditionTypeTitle}">Утерян</td>
             <td th:text="${#dates.format(cond.date, 'dd.MM.yyyy')}">02.06.2025</td>
             <td>
-                <a th:if="${userRole == 'ADMIN' or userRole == 'DECORATOR'}"
+                <a th:if="${workerRole == 'admin' or workerRole == 'decorator'}"
+
                    th:href="@{/conditions/edit/{id}(id=${cond.conditionId})}"
                    class="btn btn-sm btn-warning me-2">Редактировать</a>
-                <a th:if="${userRole == 'ADMIN'}"
+                <a th:if="${workerRole == 'admin' or workerRole == 'decorator'}"
+
                    th:href="@{/conditions/delete/{id}(id=${cond.conditionId})}"
                    onclick="return confirm('Вы уверены?');"
                    class="btn btn-sm btn-danger">Удалить</a>

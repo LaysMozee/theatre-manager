@@ -1,56 +1,58 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
-    <title th:text="${condition != null} ? 'Редактировать состояние' : 'Добавить состояние'">Форма состояния</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <meta charset="UTF-8">
+    <title>Изменить состояние реквизита</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
+
 <div class="container mt-5">
+    <h2 class="mb-4">Изменить состояние реквизита</h2>
 
-    <h1 th:text="${condition != null} ? 'Редактировать состояние' : 'Добавить состояние'">Форма</h1>
+    <form th:action="@{/condition/save}" th:object="${condition}" method="post" class="border rounded p-4 bg-white shadow">
 
-    <form th:action="${condition != null} ? @{/conditions/update} : @{/conditions/save}"
-          method="post">
-        <!-- Если мы редактируем, передаём скрытое поле с ID состояния -->
-        <input type="hidden" th:if="${condition != null}"
-               name="conditionId" th:value="${condition.conditionId}" />
+        <!-- Скрытое поле с ID реквизита -->
+        <input type="hidden" th:field="*{requisiteId}" />
 
         <div class="mb-3">
-            <label for="requisiteId" class="form-label">Выберите реквизит</label>
-            <select id="requisiteId" name="requisiteId" class="form-select" required>
-                <option th:each="r : ${allRequisites}"
-                        th:value="${r.id}"
-                        th:text="${r.title}"
-                        th:selected="${condition != null} ? ${r.id} == ${condition.requisiteId} : false">
-                    Шляпа
+            <label class="form-label"><strong>Реквизит:</strong></label>
+            <div class="form-control-plaintext" th:text="${requisite.title} + ', ' + ${requisite.type} + ', ' + ${requisite.size}"></div>
+        </div>
+
+        <div class="mb-3">
+            <label for="conditionTypeId" class="form-label">Тип состояния:</label>
+            <select class="form-select" th:field="*{conditionTypeId}" id="conditionTypeId" required>
+                <option value="" disabled selected>Выберите состояние</option>
+                <option th:each="type : ${conditionTypes}"
+                        th:value="${type.conditionTypeId}"
+                        th:text="${type.conditionTypeName}">
                 </option>
             </select>
         </div>
 
         <div class="mb-3">
-            <label for="conditionTypeId" class="form-label">Тип состояния</label>
-            <select id="conditionTypeId" name="conditionTypeId" class="form-select" required>
-                <option th:each="ct : ${allConditionTypes}"
-                        th:value="${ct.conditionTypeId}"
-                        th:text="${ct.conditionTypeName}"
-                        th:selected="${condition != null} ? ${ct.conditionTypeId} == ${condition.conditionTypeId} : false">
-                    Утерян
-                </option>
-            </select>
+            <label for="quantity" class="form-label">Количество:</label>
+            <input type="number" class="form-control" th:field="*{quantity}" id="quantity"
+                   min="1" th:max="${requisite.availableQuantity}" required>
         </div>
 
         <div class="mb-3">
-            <label for="date" class="form-label">Дата</label>
-            <input type="date" id="date" name="date" class="form-control"
-                   th:value="${condition != null} ? ${#dates.format(condition.date, 'yyyy-MM-dd')} : ''" required />
+            <label for="date" class="form-label">Дата:</label>
+            <input type="date" class="form-control" th:field="*{date}" id="date" required>
         </div>
 
-        <button type="submit" class="btn btn-success">Сохранить</button>
-        <a href="/conditions" class="btn btn-secondary ms-2">Отмена</a>
+        <div class="mb-3">
+            <label for="comment" class="form-label">Комментарий:</label>
+            <textarea class="form-control" th:field="*{comment}" id="comment" rows="3" placeholder="Что произошло?"></textarea>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <a th:href="@{/requisites}" class="btn btn-secondary">Отмена</a>
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+        </div>
     </form>
-
 </div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>
