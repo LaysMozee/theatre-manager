@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Форма репетиции</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    label { display: block; margin-top: 10px; font-weight: bold; }
+    input, select { padding: 6px; width: 250px; margin-top: 5px; }
+    button { margin-top: 15px; padding: 8px 15px; cursor: pointer; }
+  </style>
+</head>
+<body>
+<h2>Добавить / Редактировать репетицию</h2>
+<form action="/rehearsals/save" method="post">
+  <!-- ID можно скрыть, если нужен для обновления -->
+  <input type="hidden" name="rehearsalId" value="" />
+
+  <label for="date">Дата репетиции</label>
+  <input type="date" id="date" name="date" required />
+
+  <label for="time">Время репетиции</label>
+  <input type="time" id="time" name="time" required />
+
+  <label for="rehearsalRoom">Комната репетиции</label>
+  <input type="text" id="rehearsalRoom" name="rehearsalRoom" placeholder="Например, зал №1" required />
+
+  <button type="submit">Сохранить</button>
+</form>
+</body>
+</html>

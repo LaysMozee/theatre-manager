@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Редактировать реквизит</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <style>
+    .size-buttons .btn {
+      margin-right: 5px;
+      margin-bottom: 5px;
+    }
+        body {
+        background-image: url('/uploads/photos/edit.png');
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-5">
+  <h2 class="mb-4">Редактировать реквизит</h2>
+
+  <form th:action="@{/requisites/update}" method="post" class="needs-validation" novalidate th:object="${requisite}">
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+    <input type="hidden" th:field="*{requisiteId}" />
+
+    <div class="mb-3">
+      <label for="title" class="form-label">Название</label>
+      <input type="text" class="form-control" id="title" th:field="*{title}" required />
+      <div class="invalid-feedback">Пожалуйста, укажите название.</div>
+    </div>
+
+    <div class="mb-3">
+      <label for="type" class="form-label">Тип</label>
+      <select class="form-select" id="type" th:field="*{type}" required>
+        <option value="" disabled selected>Выберите тип</option>
+        <option value="Аксессуар">Аксессуар</option>
+        <option value="Мебель">Мебель</option>
+        <option value="Реквизит">Реквизит</option>
+        <option value="Одежда">Одежда</option>
+      </select>
+      <div class="invalid-feedback">Пожалуйста, укажите тип.</div>
+    </div>
+
+    <div class="mb-3">
+      <label for="totalQuantity" class="form-label">Общее количество</label>
+      <input type="number" class="form-control" id="totalQuantity" th:field="*{totalQuantity}" min="0" required />
+      <div class="invalid-feedback">Введите корректное количество.</div>
+    </div>
+
+    <div class="mb-3">
+      <label for="availableQuantity" class="form-label">Доступное количество</label>
+      <input type="number" class="form-control" id="availableQuantity" th:field="*{availableQuantity}" min="0" required />
+      <div class="invalid-feedback">Введите корректное количество.</div>
+    </div>
+
+    <div class="mb-3" id="size-section" style="display:none;">
+      <label class="form-label">Выберите размер:</label>
+      <div class="size-buttons btn-group" role="group" aria-label="Выбор размера">
+        <input type="radio" class="btn-check" name="size" id="size-none" th:field="*{size}" value="-" autocomplete="off" checked />
+        <label class="btn btn-outline-secondary" for="size-none">—</label>
+
+        <input type="radio" class="btn-check" name="size" id="size-s" th:field="*{size}" value="S" autocomplete="off" />
+        <label class="btn btn-outline-secondary" for="size-s">S (46)</label>
+
+        <input type="radio" class="btn-check" name="size" id="size-m" th:field="*{size}" value="M" autocomplete="off" />
+        <label class="btn btn-outline-secondary" for="size-m">M (48)</label>
+
+        <input type="radio" class="btn-check" name="size" id="size-l" th:field="*{size}" value="L" autocomplete="off" />
+        <label class="btn btn-outline-secondary" for="size-l">L (50)</label>
+
+        <input type="radio" class="btn-check" name="size" id="size-xl" th:field="*{size}" value="XL" autocomplete="off" />
+        <label class="btn btn-outline-secondary" for="size-xl">XL (52)</label>
+
+        <input type="radio" class="btn-check" name="size" id="size-xxl" th:field="*{size}" value="XXL" autocomplete="off" />
+        <label class="btn btn-outline-secondary" for="size-xxl">XXL (54)</label>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-primary mt-3">Сохранить изменения</button>
+    <a href="/requisites" class="btn btn-secondary mt-3 ms-2">Отмена</a>
+  </form>
+</div>
+
+<script>
+  (() => {
+  'use strict';
+
+  const form = document.querySelector('.needs-validation');
+  const typeSelect = document.getElementById('type');
+  const sizeSection = document.getElementById('size-section');
+
+  function toggleSizeSection() {
+    if (typeSelect.value === 'одежда') {
+      sizeSection.style.display = 'block';
+    } else {
+      sizeSection.style.display = 'none';
+      // Сброс размера к прочерку, если тип не одежда
+      document.getElementById('size-none').checked = true;
+    }
+  }
+
+  // Инициализация при загрузке
+  toggleSizeSection();
+
+  // Добавляем слушатель для смены типа
+  typeSelect.addEventListener('change', toggleSizeSection);
+
+  form.addEventListener('submit', event => {
+    if (!form.checkValidity()) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    form.classList.add('was-validated');
+  }, false);
+})();
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

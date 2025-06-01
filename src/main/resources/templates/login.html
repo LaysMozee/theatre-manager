@@ -1,0 +1,6 @@
+<form action="/login" method="post" xmlns:th="http://www.w3.org/1999/xhtml">
+    <input type="text" name="login" placeholder="Логин" required>
+    <input type="password" name="password" placeholder="Пароль" required>
+    <button type="submit">Войти</button>
+    <p th:if="${error}" style="color:red" th:text="${error}"></p>
+</form>

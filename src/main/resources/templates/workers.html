@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Сотрудники театра</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #D4AF37; /* золотой цвет */
+            --secondary-color: #FFD700; /* золотой градиент */
+            --dark-color: #2c3e50;
+            --light-color: #f8f9fa;
+            --accent-color: #d4af37;
+            --gold-light: #f9f295;
+            --gold-dark: #e0aa3e;
+        }
+
+        body {
+            background-image: url('/uploads/photos/workers.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            max-width: 1200px;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .header h2 {
+            font-weight: 700;
+            color: white;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 0.5rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .header h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: linear-gradient(to right, var(--gold-light), var(--gold-dark));
+            border-radius: 2px;
+        }
+
+        .role-badge {
+            background: linear-gradient(to right, var(--gold-light), var(--gold-dark));
+            color: #2c3e50;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            display: inline-block;
+            margin-left: 1rem;
+            text-shadow: 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto 2.5rem;
+            position: relative;
+        }
+
+        .search-input {
+            border-radius: 50px;
+            padding: 0.8rem 1.5rem;
+            border: 2px solid rgba(212, 175, 55, 0.3);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .search-input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 20px rgba(212, 175, 55, 0.2);
+        }
+
+        .search-btn {
+            position: absolute;
+            right: 5px;
+            top: 5px;
+            border-radius: 50px;
+            padding: 0.5rem 1.25rem;
+            background: linear-gradient(to right, var(--gold-light), var(--gold-dark));
+            border: none;
+            color: #2c3e50;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .search-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .add-btn {
+            background: linear-gradient(to right, var(--gold-light), var(--gold-dark));
+            border: none;
+            border-radius: 50px;
+            padding: 0.75rem 1.75rem;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: #2c3e50;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+            color: #2c3e50;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: white;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+            animation-delay: calc(var(--animation-order) * 0.1s);
+            position: relative;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 8px;
+            background: linear-gradient(to right, var(--gold-light), var(--gold-dark));
+        }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+        }
+
+        .card-img-container {
+            height: 280px;
+            overflow: hidden;
+            position: relative;
+            background: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .card-img-top {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .card:hover .card-img-top {
+            transform: scale(1.05);
+        }
+
+        .card-body {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .card-title {
+            font-weight: 700;
+            color: var(--dark-color);
+            margin-bottom: 1rem;
+            font-size: 1.25rem;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        .card-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 50px;
+            height: 2px;
+            background: linear-gradient(to right, var(--gold-light), var(--gold-dark));
+        }
+
+        .card-text {
+            color: #6c757d;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .card-text strong {
+            color: var(--dark-color);
+            font-weight: 600;
+        }
+
+        .card-footer {
+            background: transparent;
+            border-top: none;
+            padding: 0 1.5rem 1.5rem;
+        }
+
+        .btn-edit {
+            background: linear-gradient(to right, #f9f295, #e0aa3e);
+            color: #2c3e50;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            flex: 1;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .btn-delete {
+            background: linear-gradient(to right, #ff6b6b, #ff8e8e);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 0.5rem 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            flex: 1;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .btn-edit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(212, 175, 55, 0.3);
+            color: #2c3e50;
+        }
+
+        .btn-delete:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: #6c757d;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #e0aa3e;
+            margin-bottom: 1.5rem;
+        }
+
+        @keyframes fadeInUp {
+            0% {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .card-img-container {
+                height: 220px;
+            }
+
+            .search-container {
+                margin-bottom: 1.5rem;
+            }
+        }
+
+        /* Эффекты для золотых элементов */
+        .gold-effect {
+            text-shadow: 0 1px 1px rgba(255, 215, 0, 0.3);
+        }
+
+        .icon-gold {
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+<div class="container mt-4">
+    <div class="header">
+        <h2>Сотрудники театра</h2>
+        <div class="role-badge">
+            <i class="fas fa-user-tie me-2 icon-gold"></i>
+            <span th:text="${role}">[role]</span>
+        </div>
+    </div>
+
+    <form method="get" action="/workers" class="search-container">
+        <input type="text" name="filter" class="form-control search-input"
+               th:value="${filter}" placeholder="Поиск по ФИО или должности...">
+        <button type="submit" class="btn search-btn">
+            <i class="fas fa-search"></i> Поиск
+        </button>
+    </form>
+
+    <div class="text-center mb-5" th:if="${isAdmin}">
+        <a href="/workers/add" class="btn add-btn">
+            <i class="fas fa-plus"></i> Добавить сотрудника
+        </a>
+    </div>
+
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+        <th:block th:if="${workers != null and !workers.isEmpty()}">
+            <div class="col" th:each="worker, iter : ${workers}" th:style="'--animation-order:' + ${iter.index}">
+                <div class="card h-100">
+                    <div class="card-img-container">
+                        <img th:if="${worker.photoFilename != null and worker.photoFilename != ''}"
+                             th:src="@{'/uploads/photos/' + ${worker.photoFilename}}"
+                             class="card-img-top" alt="Фото сотрудника">
+                        <img th:if="${worker.photoFilename == null or worker.photoFilename == ''}"
+                             th:src="@{/images/default-user.png}"
+                             class="card-img-top" alt="Фото по умолчанию">
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title gold-effect" th:text="${worker.fio}">ФИО</h5>
+                        <p class="card-text">
+                            <strong><i class="fas fa-briefcase me-1 icon-gold"></i> Должность:</strong>
+                            <span th:text="${worker.post}">Пост</span><br>
+                            <strong><i class="fas fa-birthday-cake me-1 icon-gold"></i> Возраст:</strong>
+                            <span th:text="${worker.age}">Возраст</span><br>
+                            <strong><i class="fas fa-award me-1 icon-gold"></i> Опыт:</strong>
+                            <span th:text="${worker.experience}">Опыт</span> лет<br>
+
+                            <!-- Добавляем для актеров -->
+                            <span th:if="${worker.post.toLowerCase() == 'актер'}">
+                                <strong><i class="fas fa-shoe-prints me-1 icon-gold"></i> Размер обуви:</strong>
+                                <span th:text="${worker.shoeSize}">Размер обуви</span><br>
+                                <strong><i class="fas fa-tshirt me-1 icon-gold"></i> Размер одежды:</strong>
+                                <span th:text="${worker.clothingSize}">Размер одежды</span>
+                            </span>
+                        </p>
+                    </div>
+                    <div class="card-footer" th:if="${isAdmin}">
+                        <div class="d-grid gap-2 d-md-flex">
+                            <a th:href="@{'/workers/edit/' + ${worker.id}}" class="btn btn-edit">
+                                <i class="fas fa-edit me-1"></i> Редактировать
+                            </a>
+                            <form th:action="@{'/workers/delete/' + ${worker.id}}" method="post"
+                                  onsubmit="return confirm('Вы уверены, что хотите удалить этого сотрудника?');">
+                                <button type="submit" class="btn btn-delete">
+                                    <i class="fas fa-trash-alt me-1"></i> Удалить
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </th:block>
+
+        <th:block th:if="${workers == null or workers.isEmpty()}">
+            <div class="col-12">
+                <div class="empty-state">
+                    <i class="fas fa-user-slash icon-gold"></i>
+                    <h4>Сотрудники не найдены</h4>
+                    <p class="mb-4">Попробуйте изменить параметры поиска или добавить нового сотрудника</p>
+                    <a th:if="${isAdmin}" href="/workers/add" class="btn add-btn">
+                        <i class="fas fa-plus"></i> Добавить сотрудника
+                    </a>
+                </div>
+            </div>
+        </th:block>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

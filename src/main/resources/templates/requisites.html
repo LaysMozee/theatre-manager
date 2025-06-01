@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8" />
+  <title>Реквизиты</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+</head>
+<body>
+<div class="container mt-5">
+  <h1>Реквизиты</h1>
+
+  <!-- Ссылка на «Состояния» -->
+  <div class="mb-3">
+    <a href="/conditions" class="btn btn-outline-secondary">Перейти к «Состояниям»</a>
+  </div>
+
+  <th:block th:if="${userRole == 'ADMIN' or userRole == 'DRESSER'}">
+    <a th:href="@{/requisite/edit/{id}(id=${requisite.requisiteId})}" class="btn btn-warning btn-sm">Редактировать</a>
+  </th:block>
+
+
+  <table class="table table-striped table-bordered align-middle">
+    <thead class="table-dark">
+    <tr>
+      <th>requisite_id</th>
+      <th>title</th>
+      <th>type</th>
+      <th>size</th>
+      <th>available_quantity</th>
+      <th>total_quantity</th>
+      <th>Действия</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="req : ${requisites}">
+      <td th:text="${req.requisiteId}">1</td>
+      <td th:text="${req.title}">Название</td>
+      <td th:text="${req.type}">Тип</td>
+      <td th:text="${req.size}">M</td>
+      <td th:text="${req.availableQuantity}">5</td>
+      <td th:text="${req.totalQuantity}">10</td>
+      <td>
+        <!-- Редактировать (ADMIN или DECORATOR) -->
+        <a th:if="${userRole == 'ADMIN' or userRole == 'DECORATOR'}"
+           th:href="@{/requisites/edit/{id}(id=${req.requisiteId})}"
+           class="btn btn-sm btn-warning me-2">Редактировать</a>
+
+        <!-- Удалить (только ADMIN) -->
+        <a th:if="${userRole == 'ADMIN'}"
+           th:href="@{/requisites/delete/{id}(id=${req.requisiteId})}"
+           onclick="return confirm('Вы уверены?');"
+           class="btn btn-sm btn-danger">Удалить</a>
+      </td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(requisites)}">
+      <td colspan="7" class="text-center">Реквизит отсутствует</td>
+    </tr>
+    </tbody>
+  </table>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
