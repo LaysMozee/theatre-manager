@@ -3,13 +3,21 @@ package com.theatre.manager.model;
 import java.time.LocalDate;
 
 public class Condition {
+    private Long conditionId;        // <-- добавлено
     private Long requisiteId;
     private Integer conditionTypeId;
     private LocalDate date;
     private String comment;
     private int quantity;
 
-    // Геттеры и сеттеры для всех полей
+    public Long getConditionId() {
+        return conditionId;
+    }
+
+    public void setConditionId(Long conditionId) {
+        this.conditionId = conditionId;
+    }
+
     public Long getRequisiteId() {
         return requisiteId;
     }

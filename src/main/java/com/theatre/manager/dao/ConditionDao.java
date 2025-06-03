@@ -13,7 +13,6 @@ import java.util.List;
 
 @Repository
 public class ConditionDao {
-
     private final JdbcTemplate jdbc;
 
     public ConditionDao(JdbcTemplate jdbc) {
@@ -22,9 +21,8 @@ public class ConditionDao {
 
     @Transactional
     public void addConditionAndUpdateRequisite(Condition condition) {
-        // 1) Вставка нового состояния в таблицу "condition" (единственное число)
         jdbc.update("""
-            INSERT INTO condition 
+            INSERT INTO conditions
                 (requisite_id, condition_type_id, date, comment, quantity)
             VALUES (?, ?, ?, ?, ?)
             """,
@@ -35,7 +33,6 @@ public class ConditionDao {
                 condition.getQuantity()
         );
 
-        // 2) Обновление доступного количества реквизита
         int updated = jdbc.update("""
             UPDATE requisite
             SET available_quantity = available_quantity - ?
@@ -68,7 +65,7 @@ public class ConditionDao {
                 c.quantity,
                 c.date,
                 c.comment
-            FROM condition c
+            FROM conditions c
             JOIN requisite r ON c.requisite_id = r.requisite_id
             JOIN condition_type ct ON c.condition_type_id = ct.condition_type_id
             ORDER BY c.date DESC
@@ -95,4 +92,53 @@ public class ConditionDao {
         cwt.setComment(rs.getString("comment"));
         return cwt;
     };
+
+    public Condition findById(Long id) {
+        return jdbc.queryForObject("""
+            SELECT
+                condition_id,
+                requisite_id,
+                condition_type_id,
+                date,
+                comment,
+                quantity
+            FROM conditions
+            WHERE condition_id = ?
+            """,
+                (rs, rowNum) -> {
+                    Condition c = new Condition();
+                    c.setConditionId(rs.getLong("condition_id"));
+                    c.setRequisiteId(rs.getLong("requisite_id"));
+                    c.setConditionTypeId(rs.getInt("condition_type_id"));
+                    c.setDate(rs.getDate("date").toLocalDate());
+                    c.setComment(rs.getString("comment"));
+                    c.setQuantity(rs.getInt("quantity"));
+                    return c;
+                },
+                id
+        );
+    }
+
+    @Transactional
+    public void updateCondition(Condition condition) {
+        jdbc.update("""
+            UPDATE conditions
+            SET condition_type_id = ?,
+                date = ?,
+                comment = ?,
+                quantity = ?
+            WHERE condition_id = ?
+            """,
+                condition.getConditionTypeId(),
+                Date.valueOf(condition.getDate()),
+                condition.getComment(),
+                condition.getQuantity(),
+                condition.getConditionId()
+        );
+    }
+
+    public void deleteById(Long conditionId) {
+        jdbc.update("DELETE FROM conditions WHERE condition_id = ?", conditionId);
+    }
+
 }

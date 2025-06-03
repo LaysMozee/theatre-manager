@@ -14,33 +14,37 @@ public class LoginController {
     @Autowired
     private WorkerRepository workerRepository;
 
+    // GET /login — показать форму логина
     @GetMapping("/login")
     public String loginForm() {
-        return "login"; // страница login.html
+        return "login"; // thymeleaf-шаблон login.html
     }
 
+    // POST /login — обработать отправку формы
     @PostMapping("/login")
     public String login(
             @RequestParam String login,
             @RequestParam String password,
             HttpSession session,
-            Model model) {
-
+            Model model
+    ) {
         Worker worker = workerRepository.findByLogin(login);
-
+        // если нет такого пользователя или пароль не совпадает
         if (worker == null || !worker.getPassword().equals(password)) {
             model.addAttribute("error", "Неверный логин или пароль");
             return "login";
         }
 
-        // Устанавливаем данные пользователя в сессию
+        // Сохраняем в сессию: id, роль и ФИО
         session.setAttribute("workerId", worker.getId());
-        session.setAttribute("workerRole", worker.getRole()); // обязательно маленькими буквами
+        session.setAttribute("workerRole", worker.getRole().toLowerCase()); // роль в нижнем регистре
         session.setAttribute("workerFio", worker.getFio());
 
-        return "redirect:/";  // после успешного логина на главную
+        // После успешного логина перенаправляем на главную (HomeController переадресует на /rehearsals)
+        return "redirect:/";
     }
 
+    // GET /logout — выход из системы
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
