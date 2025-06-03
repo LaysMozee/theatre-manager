@@ -24,6 +24,7 @@ public class RehearsalResultSetExtractor implements ResultSetExtractor<List<Rehe
                 dto.setDate(rs.getDate("date").toLocalDate());
                 dto.setTime(rs.getTime("time").toLocalTime());
                 dto.setRehearsalRoom(rs.getString("rehearsal_room"));
+                dto.setComment(rs.getString("comment"));
                 map.put(rId, dto);
             }
             Long wId = rs.getLong("worker_id");

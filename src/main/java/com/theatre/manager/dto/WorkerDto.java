@@ -26,4 +26,5 @@ public class WorkerDto {
     public void setFio(String fio) {
         this.fio = fio;
     }
+
 }

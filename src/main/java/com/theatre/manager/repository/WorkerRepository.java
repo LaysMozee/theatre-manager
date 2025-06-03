@@ -17,6 +17,8 @@ public interface WorkerRepository extends JpaRepository<Worker, Long> {
     List<Worker> findAll();
     // Найти по ФИО или должности (по частичному совпадению, без учёта регистра)
     List<Worker> findByFioContainingIgnoreCaseOrPostContainingIgnoreCase(String fio, String post);
-
+    List<Worker> findByPostIgnoreCase(String post);
     List<Worker> findByFioContainingIgnoreCase(String fioPart);
+
+    List<Worker> findByPost(String post);
 }

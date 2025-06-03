@@ -10,6 +10,9 @@ public class RehearsalDto {
     private LocalDate date;
     private LocalTime time;
     private String rehearsalRoom;
+    private String comment;
+
+
     private List<WorkerDto> workers = new ArrayList<>();
 
     public RehearsalDto() { }
@@ -56,5 +59,13 @@ public class RehearsalDto {
 
     public void addWorker(WorkerDto worker) {
         this.workers.add(worker);
+    }
+
+    public String getComment() {
+        return comment;
+    }
+
+    public void setComment(String comment) {
+        this.comment = comment;
     }
 }

@@ -1,39 +1,30 @@
 package com.theatre.manager.service;
 
-import com.theatre.manager.entity.Worker;
-import com.theatre.manager.repository.WorkerRepository;
+import com.theatre.manager.dto.WorkerDto;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Service
 public class WorkerService {
+    private final JdbcTemplate jdbcTemplate;
 
-    private final WorkerRepository workerRepository;
-
-    public WorkerService(WorkerRepository workerRepository) {
-        this.workerRepository = workerRepository;
+    public WorkerService(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
-    // Получить всех работников
-    public List<Worker> findAll() {
-        return workerRepository.findAll();
+    /**
+     * Возвращает список WorkerDto тех сотрудников, у которых поле post = переданное значение.
+     */
+    public List<WorkerDto> getWorkersByPostDto(String post) {
+        String sql = "SELECT worker_id, fio FROM worker WHERE post = ? ORDER BY fio";
+        return jdbcTemplate.query(
+                sql,
+                (rs, rowNum) -> new WorkerDto(
+                        rs.getLong("worker_id"),
+                        rs.getString("fio")
+                ),
+                post
+        );
     }
-
-    // Поиск по ФИО
-    public List<Worker> findByFIO(String fio) {
-        return workerRepository.findByFioContainingIgnoreCase(fio);
-    }
-
-    // Сохранить работника
-    public Worker save(Worker worker) {
-        return workerRepository.save(worker);
-    }
-
-    // Удалить по ID
-    public void deleteById(Long id) {
-        workerRepository.deleteById(id);
-    }
-
-
 }
