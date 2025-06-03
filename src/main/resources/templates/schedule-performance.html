@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Запланировать спектакль</title>
+</head>
+<body>
+<h2>Запланировать спектакль</h2>
+<form id="schedulePerformanceForm">
+  <label>Спектакль (ID):<br />
+    <input type="number" id="performanceId" required />
+  </label><br /><br />
+  <label>Дата:<br />
+    <input type="date" id="date" required />
+  </label><br /><br />
+  <label>Время:<br />
+    <input type="time" id="time" required />
+  </label><br /><br />
+  <button type="submit">Запланировать</button>
+</form>
+
+<div id="result"></div>
+
+<script>
+  document.getElementById('schedulePerformanceForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const data = {
+          performanceId: parseInt(document.getElementById('performanceId').value),
+          date: document.getElementById('date').value,
+          time: document.getElementById('time').value
+      };
+
+      try {
+          const response = await fetch('/performances/schedule', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(data)
+          });
+
+          const text = await response.text();
+
+          if (response.ok) {
+              document.getElementById('result').textContent = text;
+          } else {
+              document.getElementById('result').textContent = 'Ошибка: ' + text;
+          }
+      } catch (err) {
+          document.getElementById('result').textContent = 'Ошибка: ' + err.message;
+      }
+  });
+</script>
+</body>
+</html>
