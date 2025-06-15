@@ -1,21 +1,64 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="ru" xmlns:th="http://www.w3.org/1999/xhtml">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Список спектаклей</title>
-    <!-- Bootstrap 5 CSS из CDN -->
-    <link
-            href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-            rel="stylesheet"
-    />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 </head>
-<body>
+<style>   body {
+background-image: url('/uploads/photos/retro-sceny-vsemirnogo-dna-teatra-s-zanaveskami-i-scenoi.jpg');
+background-size: cover;
+background-repeat: no-repeat;
+background-attachment: fixed;
+}
+  .form-select option {
+    color: black;
+  }
 
+  .table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+</style>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+        <a class="navbar-brand" href="#" th:text="'Театр — ' + ${username}">Театр</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Переключатель навигации">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/workers}">
+                        <i class="fas fa-users"></i> Наши актёры
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/requisites}">
+                        <i class="fas fa-mask"></i> Реквизит
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/rehearsals}">
+                        <i class="fas fa-calendar-alt"></i> Репетиции
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{performances/view}">
+                        <i class="fas fa-theater-masks"></i> Спектакли
+                    </a>
+                </li>
+            </ul>
+            <a class="btn btn-outline-danger" th:href="@{/logout}">
+                <i class="fas fa-sign-out-alt me-1"></i> Выход
+            </a>
+        </div>
+    </div>
+</nav>
 <div class="container my-5">
     <h1 class="mb-4">🎭 Список спектаклей</h1>
-
-    <!-- Фильтр по жанрам -->
     <div class="mb-3 row align-items-center">
         <label for="genreFilter" class="col-sm-2 col-form-label fw-bold">
             Фильтр по жанру:
@@ -26,13 +69,11 @@
             </select>
         </div>
         <div class="col-sm-6 text-end">
-            <button id="refreshBtn" class="btn btn-outline-primary">
-                Обновить
-            </button>
+            <button id="refreshBtn" class="btn btn-outline-primary me-2">Обновить</button>
+            <a th:if="${canAdd}" href="/performances/add" class="btn btn-primary">Добавить спектакль</a>
         </div>
     </div>
 
-    <!-- Таблица со спектаклями -->
     <div class="table-responsive">
         <table class="table table-hover table-bordered align-middle">
             <thead class="table-dark">
@@ -41,100 +82,156 @@
                 <th>Описание</th>
                 <th>Длительность (мин)</th>
                 <th>Жанр</th>
+                <th>Действия</th>
             </tr>
             </thead>
             <tbody id="performanceTableBody">
-            <!-- Здесь будут строки с спектаклями -->
+            <!-- Строки будут тут -->
             </tbody>
         </table>
     </div>
 </div>
 
-<script>
-    // Хранение подгруженных данных
-    let genres = [];
-    let performances = [];
 
-    // Запрашиваем список жанров
-    async function fetchGenres() {
-        try {
-            const res = await fetch('/performances/genres');
-            genres = await res.json();
-        } catch (err) {
-            console.error('Ошибка при загрузке жанров:', err);
-            genres = [];
-        }
-        const genreFilter = document.getElementById('genreFilter');
-        genreFilter.innerHTML = '<option value="">Все жанры</option>';
-        genres.forEach(g => {
-            const opt = document.createElement('option');
-            opt.value = g.genreId;
-            opt.textContent = g.genreName;
-            genreFilter.appendChild(opt);
-        });
-    }
+    <script th:inline="javascript">
+     // Получаем роль пользователя из Thymeleaf или ставим user по умолчанию
+     let userRole = /*[[${userRole != null} ? '${userRole}' : 'user']]*/ 'user';
+     userRole = userRole.toLowerCase();
 
-    // Запрашиваем список спектаклей
-    async function fetchPerformances() {
-        try {
-            const res = await fetch('/performances');
-            performances = await res.json();
-        } catch (err) {
-            console.error('Ошибка при загрузке спектаклей:', err);
-            performances = [];
-        }
-        renderPerformances();
-    }
+     let genres = [];
+     let performances = [];
 
-    // Отрисовываем таблицу, фильтруя по жанру, если выбран
-    function renderPerformances() {
-        const tbody = document.getElementById('performanceTableBody');
-        const selectedGenre = document.getElementById('genreFilter').value;
-        tbody.innerHTML = '';
+     // Загрузка жанров с сервера и обновление фильтра
+     async function fetchGenres() {
+       try {
+         const response = await fetch('/performances/genres');
+         genres = await response.json();
+       } catch (error) {
+         console.error('Ошибка при загрузке жанров:', error);
+         genres = [];
+       }
 
-        const filtered = selectedGenre
-            ? performances.filter(p => String(p.genreId) === selectedGenre)
-            : performances;
+       const genreFilter = document.getElementById('genreFilter');
+       genreFilter.innerHTML = '<option value="">Все жанры</option>';
+       genres.forEach(genre => {
+         const option = document.createElement('option');
+         option.value = genre.genreId;
+         option.textContent = genre.genreName;
+         genreFilter.appendChild(option);
+       });
+     }
 
-        if (filtered.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="4" class="text-center text-muted">
-                        Спектакли не найдены.
-                    </td>
-                </tr>`;
-            return;
-        }
+     // Загрузка спектаклей с сервера
+     async function fetchPerformances() {
+       try {
+         const response = await fetch('/performances');
+         performances = await response.json();
+       } catch (error) {
+         console.error('Ошибка при загрузке спектаклей:', error);
+         performances = [];
+       }
+       renderPerformances();
+     }
 
-        filtered.forEach(p => {
-            // Ищем название жанра по p.genreId
-            const genreName = (genres.find(g => g.genreId === p.genreId) || {}).genreName || '—';
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td>${p.title}</td>
-                <td>${p.description}</td>
-                <td>${p.duration}</td>
-                <td>${genreName}</td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
+     // Рендеринг таблицы спектаклей с фильтрацией по жанру
+     function renderPerformances() {
+  const tbody = document.getElementById('performanceTableBody');
+  const selectedGenre = document.getElementById('genreFilter').value;
+  tbody.innerHTML = '';
 
-    // Обработчики событий
-    document.getElementById('genreFilter').addEventListener('change', renderPerformances);
-    document.getElementById('refreshBtn').addEventListener('click', () => {
-        fetchGenres();
+  let filtered = performances;
+  if (selectedGenre) {
+    filtered = performances.filter(p => String(p.genreId) === selectedGenre);
+  }
+
+  if (filtered.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="5" class="text-center text-muted">Спектакли не найдены.</td>
+      </tr>`;
+    return;
+  }
+
+  filtered.forEach(p => {
+    const genreName = (genres.find(g => g.genreId === p.genreId) || {}).genreName || '—';
+
+    // Убираем условие, чтобы кнопки всегда были видны
+    const actionButtons = `
+      <td>
+        <button class="btn btn-sm btn-primary me-1" onclick="editPerformance(${p.performanceId})">Редактировать</button>
+        <button class="btn btn-sm btn-danger" onclick="deletePerformance(${p.performanceId})">Удалить</button>
+      </td>`;
+
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${escapeHtml(p.title)}</td>
+      <td>${escapeHtml(p.description)}</td>
+      <td>${p.duration}</td>
+      <td>${escapeHtml(genreName)}</td>
+      ${actionButtons}
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+
+     // Функция для экранирования HTML (безопасность)
+     function escapeHtml(text) {
+       if (!text) return '';
+       return text.replace(/[&<>"']/g, function(m) {
+         return {
+           '&': '&amp;',
+           '<': '&lt;',
+           '>': '&gt;',
+           '"': '&quot;',
+           "'": '&#39;'
+         }[m];
+       });
+     }
+
+     // Удаление спектакля с подтверждением
+function deletePerformance(id) {
+  if (!confirm('Удалить спектакль с ID: ' + id + '?')) return;
+
+  fetch('/performances/delete/' + id, {
+    method: 'DELETE',
+  })
+    .then(res => {
+      if (!res.ok) throw new Error('Ошибка HTTP: ' + res.status);
+      return res.json();
+    })
+    .then(data => {
+      if (data.status === 'success') {
+        alert('Спектакль удалён');
         fetchPerformances();
-    });
+      } else {
+        alert('Ошибка при удалении: ' + (data.message || 'неизвестная ошибка'));
+      }
+    })
+    .catch(err => alert('Ошибка сети: ' + err.message));
+}
 
-    // При загрузке страницы подгружаем данные
-    (async () => {
-        await fetchGenres();
-        await fetchPerformances();
-    })();
+
+     // Редирект на страницу редактирования спектакля
+     function editPerformance(id) {
+       window.location.href = `/performances/edit/${id}`;
+     }
+
+     // Обработчики событий
+     document.getElementById('genreFilter').addEventListener('change', renderPerformances);
+     document.getElementById('refreshBtn').addEventListener('click', async () => {
+       await fetchGenres();
+       await fetchPerformances();
+     });
+
+     // Инициализация — загрузка данных при загрузке страницы
+     (async () => {
+       await fetchGenres();
+       await fetchPerformances();
+     })();
 </script>
 
-<!-- Bootstrap 5 JS Bundle из CDN -->
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

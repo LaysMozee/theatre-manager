@@ -15,6 +15,10 @@ public class PerformanceDto {
         this.genreId = genreId;
     }
 
+    public PerformanceDto() {
+
+    }
+
     public Long getPerformanceId() {
         return performanceId;
     }

@@ -31,4 +31,8 @@ public class PerformanceService {
                 dto.getTime()
         );
     }
+    public void deletePerformance(Long id) {
+        String sql = "DELETE FROM performance WHERE performance_id = ?";
+        jdbcTemplate.update(sql, id);
+    }
 }

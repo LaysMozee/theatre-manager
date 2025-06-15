@@ -1,18 +1,60 @@
 <!DOCTYPE html>
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="#" th:text="'Театр — ' + ${username}">Театр</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+              aria-controls="navbarNav" aria-expanded="false" aria-label="Переключатель навигации">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/workers}">
+              <i class="fas fa-users"></i> Наши актёры
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/requisites}">
+              <i class="fas fa-mask"></i> Реквизит
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{/rehearsals}">
+              <i class="fas fa-calendar-alt"></i> Репетиции
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" th:href="@{performances/view}">
+              <i class="fas fa-theater-masks"></i> Спектакли
+            </a>
+          </li>
+        </ul>
+        <a class="btn btn-outline-danger" th:href="@{/logout}">
+          <i class="fas fa-sign-out-alt me-1"></i> Выход
+        </a>
+      </div>
+    </div>
+  </nav>
   <meta charset="UTF-8">
   <title>Управление театральными реквизитами</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
   <style>
-    .badge-lg { font-size: 0.9em; padding: 0.5em 0.75em; }
-    .status-badge { min-width: 120px; display: inline-block; text-align: center; }
-    .action-buttons { min-width: 150px; }
-    .nav-tabs .nav-link.active { font-weight: 500; }
-    .requisite-title { font-weight: 500; color: #333; }
-    .empty-state { color: #6c757d; }
-    .empty-state-icon { font-size: 3rem; }
+    body {
+    background-image: url('/uploads/photos/Blackout-Curtains-Sample-1024x683.png');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+.badge-lg { font-size: 0.9em; padding: 0.5em 0.75em; }
+.status-badge { min-width: 120px; display: inline-block; text-align: center; }
+.action-buttons { min-width: 150px; }
+.nav-tabs .nav-link.active { font-weight: 500; }
+.requisite-title { font-weight: 500; color: #333; }
+.empty-state { color: #6c757d; }
+.empty-state-icon { font-size: 3rem; }
   </style>
 </head>
 <body class="bg-light">
@@ -211,6 +253,8 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script th:inline="javascript">
+  let userRole = /*[[${userRole}]]*/ 'ACTOR'; // будет "ADMIN" или другая роль
+</script>
   /*<![CDATA[*/
   const activeTab = /*[[${activeTab}]]*/ 'requisites';
   const triggerEl = document.querySelector('#' + activeTab + '-tab');

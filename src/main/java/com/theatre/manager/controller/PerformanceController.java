@@ -9,7 +9,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/performances")
@@ -55,15 +57,6 @@ public class PerformanceController {
      * Создать новый спектакль
      * POST /performances/create
      */
-    @PostMapping("/create")
-    public ResponseEntity<Long> createPerformance(@RequestBody PerformanceDto dto) {
-        try {
-            Long id = performanceService.createPerformance(dto);
-            return ResponseEntity.ok(id);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
 
     /**
      * Запланировать спектакль (создать расписание)
@@ -78,4 +71,19 @@ public class PerformanceController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Ошибка: " + e.getMessage());
         }
     }
+    @DeleteMapping("/{id}")
+    public Map<String, String> deletePerformance(@PathVariable Long id) {
+        Map<String, String> response = new HashMap<>();
+        try {
+            jdbcTemplate.update("DELETE FROM performance WHERE performance_id = ?", id);
+            response.put("status", "success");
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+        }
+        return response;
+    }
+
+
+
 }
