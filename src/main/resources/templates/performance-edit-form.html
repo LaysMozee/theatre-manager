@@ -1,0 +1,20 @@
+<form th:action="@{/performances/update}" method="post" th:object="${performance}"
+      xmlns:th="http://www.w3.org/1999/xhtml">
+    <input type="hidden" th:field="*{performanceId}" />
+
+    <label>Название:</label>
+    <input type="text" th:field="*{title}" />
+
+    <label>Описание:</label>
+    <textarea th:field="*{description}"></textarea>
+
+    <label>Продолжительность:</label>
+    <input type="number" th:field="*{duration}" />
+
+    <label>Жанр:</label>
+    <select th:field="*{genreId}">
+        <option th:each="genre : ${genres}" th:value="${genre.genreId}" th:text="${genre.genreName}"></option>
+    </select>
+
+    <button type="submit">Сохранить</button>
+</form>

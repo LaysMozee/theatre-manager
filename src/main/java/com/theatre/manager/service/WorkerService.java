@@ -27,4 +27,15 @@ public class WorkerService {
                 post
         );
     }
+    public List<WorkerDto> getAllWorkers() {
+        String sql = "SELECT worker_id, fio FROM worker ORDER BY fio";
+        return jdbcTemplate.query(
+                sql,
+                (rs, rowNum) -> new WorkerDto(
+                        rs.getLong("worker_id"),
+                        rs.getString("fio")
+                )
+        );
+    }
+
 }

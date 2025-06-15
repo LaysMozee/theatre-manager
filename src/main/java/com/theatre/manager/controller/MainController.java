@@ -19,12 +19,6 @@ public class MainController {
         return "index";
     }
 
-    @GetMapping("/repertoire")
-    public String repertoire() {
-        return "repertoire";
-    }
-
-
     @GetMapping("/main-actors")
     public String actors(){
         return "actors";

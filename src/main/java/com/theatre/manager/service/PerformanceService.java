@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class PerformanceService {
 
@@ -35,4 +37,13 @@ public class PerformanceService {
         String sql = "DELETE FROM performance WHERE performance_id = ?";
         jdbcTemplate.update(sql, id);
     }
+    public List<PerformanceDto> findAll() {
+        String sql = "SELECT performance_id, title FROM performance ORDER BY title";
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new PerformanceDto(
+                rs.getLong("performance_id"),
+                rs.getString("title"),
+                null, null, null
+        ));
+    }
+
 }

@@ -1,0 +1,33 @@
+<form th:action="@{${repertoire.repertoireId} != null ? '/repertoire/edit/' + ${repertoire.repertoireId} : '/repertoire/add'}"
+      method="post" xmlns:th="http://www.w3.org/1999/xhtml">
+  <div>
+    <label>Дата</label>
+    <input type="date" name="date" th:value="${repertoire.date}" required/>
+  </div>
+  <div>
+    <label>Время</label>
+    <input type="time" name="time" th:value="${repertoire.time}" required/>
+  </div>
+  <div>
+    <label>Спектакль</label>
+    <select name="performanceId" required>
+      <option th:each="perf : ${performanceList}" th:value="${perf.performance_id}" th:text="${perf.title}" th:selected="${perf.performance_id == repertoire.performanceId}"></option>
+    </select>
+  </div>
+  <div>
+    <label>Работники</label>
+    <div th:each="worker : ${workerList}">
+      <input type="checkbox" name="workerIds" th:value="${worker.worker_id}" th:checked="${workerIds != null and workerIds.contains(worker.worker_id)}"/> <span th:text="${worker.fio}"></span><br/>
+    </div>
+  </div>
+  <div>
+    <label>Реквизиты и количество</label>
+    <div th:each="req, iterStat : ${requisiteList}">
+      <input type="checkbox" name="requisiteIds" th:value="${req.requisite_id}" th:checked="${requisiteIds != null and requisiteIds.contains(req.requisite_id)}"/>
+      <span th:text="${req.title}"></span>
+      <input type="number" name="quantities" min="0" th:value="${quantities != null and quantities.size() > iterStat.index ? quantities[iterStat.index] : 0}"/>
+      <br/>
+    </div>
+  </div>
+  <button type="submit">Сохранить</button>
+</form>
