@@ -38,4 +38,24 @@ public class PerformanceDto {
     public Long getGenreId() {
         return genreId;
     }
+    public void setPerformanceId(Long performanceId) {
+        this.performanceId = performanceId;
+    }
+
+    public void setTitle(String title) {
+        this.title = title;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
+    public void setDuration(Integer duration) {
+        this.duration = duration;
+    }
+
+    public void setGenreId(Long genreId) {
+        this.genreId = genreId;
+    }
+
 }

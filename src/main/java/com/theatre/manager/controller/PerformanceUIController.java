@@ -144,18 +144,26 @@ public class PerformanceUIController {
         }
     }
     @PostMapping("/performances/update")
-    public String updatePerformance(@ModelAttribute PerformanceDto performance) {
-        // Здесь нужно обновить данные спектакля в базе.
+    public String updatePerformance(@ModelAttribute("performance") PerformanceDto performance) {
         String sql = "UPDATE performance SET title = ?, description = ?, duration = ?, genre_id = ? WHERE performance_id = ?";
-        jdbcTemplate.update(sql,
+
+        int rows = jdbcTemplate.update(sql,
                 performance.getTitle(),
                 performance.getDescription(),
                 performance.getDuration(),
                 performance.getGenreId(),
                 performance.getPerformanceId()
         );
-        return "redirect:/performances/view"; // или куда хочешь после обновления
+
+        if (rows == 0) {
+            // Если обновление не прошло — можно логировать или возвращать ошибку
+            // Например, вернуть на форму с сообщением об ошибке
+            return "performance-edit-form";
+        }
+
+        return "redirect:/performances/view";
     }
+
     @DeleteMapping("/performances/delete/{id}")
     @ResponseBody
     public Map<String, String> deletePerformance(@PathVariable Long id) {
