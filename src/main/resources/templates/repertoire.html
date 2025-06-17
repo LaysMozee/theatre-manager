@@ -14,14 +14,18 @@
 
     <h1>Репертуар</h1>
 
-    <!-- Доступ запрещён -->
     <div th:if="${param.error}" class="alert alert-danger">Доступ запрещён!</div>
 
     <!-- Таблица репертуара -->
     <table class="table table-striped align-middle">
         <thead>
         <tr>
-            <th>Дата</th><th>Время</th><th>Спектакль</th><th>Действия</th>
+            <th>Дата</th>
+            <th>Время</th>
+            <th>Спектакль</th>
+            <th>Сотрудники</th>
+            <th>Реквизит (кол-во)</th>
+            <th>Действия</th>
         </tr>
         </thead>
         <tbody>
@@ -30,14 +34,24 @@
             <td th:text="${#temporals.format(item.time,'HH:mm')}"></td>
             <td th:text="${item.performanceTitle}"></td>
             <td>
+                <ul class="list-unstyled mb-0">
+                    <li th:each="name : ${item.workerNames}"
+                        th:text="${name}"></li>
+                </ul>
+            </td>
+            <td>
+                <ul class="list-unstyled mb-0">
+                    <li th:each="req : ${item.requisites}"
+                        th:text="${req.title + ' (' + req.quantity + ')'}"></li>
+                </ul>
+            </td>
+            <td>
                 <div th:if="${isAdminOrDirector}">
-                    <!-- Редактировать -->
                     <button class="btn btn-sm btn-warning me-2"
                             data-bs-toggle="modal"
-                            th:attr="data-bs-target='#editModal__' + ${item.repertoireId}">
+                            th:data-bs-target="'#editModal__' + ${item.repertoireId}">
                         Редактировать
                     </button>
-                    <!-- Удалить -->
                     <form th:action="@{/repertoire/delete/{id}(id=${item.repertoireId})}"
                           method="post" style="display:inline;"
                           onsubmit="return confirm('Удалить?');">
@@ -53,12 +67,12 @@
     <div th:if="${isAdminOrDirector}">
         <hr/>
         <button class="btn btn-primary mb-3" type="button"
-                data-bs-toggle="collapse" data-bs-target="#addForm">
+                data-bs-toggle="collapse"
+                data-bs-target="#addForm">
             Добавить в репертуар
         </button>
         <div class="collapse" id="addForm">
             <form th:action="@{/repertoire/add}" method="post" novalidate>
-                <!-- Спектакль -->
                 <div class="mb-3">
                     <label class="form-label">Спектакль</label>
                     <select name="performanceId" class="form-select" required>
@@ -68,7 +82,6 @@
                                 th:text="${perf['title']}"></option>
                     </select>
                 </div>
-                <!-- Дата и время -->
                 <div class="row g-2 mb-3">
                     <div class="col">
                         <label class="form-label">Дата</label>
@@ -79,7 +92,6 @@
                         <input type="time" name="time" class="form-control" required/>
                     </div>
                 </div>
-                <!-- Сотрудники -->
                 <div class="mb-3">
                     <label class="form-label">Сотрудники</label>
                     <select name="workerIds[]" multiple size="5" class="form-select">
@@ -87,9 +99,8 @@
                                 th:value="${w['worker_id']}"
                                 th:text="${w['fio']}"></option>
                     </select>
-                    <small class="text-muted">Ctrl/Cmd — множественный выбор</small>
+                    <small class="text-muted">Ctrl/Cmd — множественный выбор</small>
                 </div>
-                <!-- Реквизиты -->
                 <div class="mb-3">
                     <label class="form-label">Реквизит и количество</label>
                     <div id="add-requisites-container">
@@ -114,20 +125,22 @@
         </div>
     </div>
 
-    <!-- Модалки редактирования -->
+    <!-- Модалки редактирования (упрощённо) -->
     <div th:each="item : ${repertoireList}">
         <div class="modal fade" th:id="'editModal__' + ${item.repertoireId}" tabindex="-1">
             <div class="modal-dialog modal-lg">
                 <div class="modal-content">
-                    <form th:action="@{/repertoire/edit/{id}(id=${item.repertoireId})}" method="post" novalidate>
+                    <form th:action="@{/repertoire/edit/{id}(id=${item.repertoireId})}"
+                          method="post" novalidate>
                         <div class="modal-header">
-                            <h5 class="modal-title" th:text="'Редактировать: ' + ${item.performanceTitle}"></h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                            <h5 class="modal-title"
+                                th:text="'Редактировать: ' + ${item.performanceTitle}"></h5>
+                            <button type="button" class="btn-close"
+                                    data-bs-dismiss="modal"></button>
                         </div>
                         <div class="modal-body">
-                            <!-- Скрытый ID -->
-                            <input type="hidden" name="id" th:value="${item.repertoireId}"/>
-                            <!-- Спектакль -->
+                            <input type="hidden" name="id"
+                                   th:value="${item.repertoireId}"/>
                             <div class="mb-3">
                                 <label class="form-label">Спектакль</label>
                                 <select name="performanceId" class="form-select" required>
@@ -138,24 +151,28 @@
                                             th:selected="${perf['performance_id']==item.performanceId}"></option>
                                 </select>
                             </div>
-                            <!-- Дата и время -->
                             <div class="row g-2 mb-3">
                                 <div class="col">
                                     <label class="form-label">Дата</label>
-                                    <input type="date" name="date" class="form-control"
+                                    <input type="date" name="date"
+                                           class="form-control"
                                            th:value="${item.date}" required/>
                                 </div>
                                 <div class="col">
                                     <label class="form-label">Время</label>
-                                    <input type="time" name="time" class="form-control"
+                                    <input type="time" name="time"
+                                           class="form-control"
                                            th:value="${item.time}" required/>
                                 </div>
                             </div>
-                            <!-- (Опционально) Сотрудники/Реквизит можно дописать по аналогии -->
                         </div>
                         <div class="modal-footer">
-                            <button type="submit" class="btn btn-primary">Сохранить</button>
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                            <button type="submit" class="btn btn-primary">
+                                Сохранить
+                            </button>
+                            <button type="button" class="btn btn-secondary"
+                                    data-bs-dismiss="modal">Отмена
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -167,21 +184,20 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    // Добавление блока реквизита в форме добавления
+    // Добавление/удаление блоков реквизита
     document.getElementById('add-requisite-btn').addEventListener('click', () => {
-      const container = document.getElementById('add-requisites-container');
-      const template = container.querySelector('.requisite-group');
-      const clone = template.cloneNode(true);
-      clone.querySelector('select').selectedIndex = 0;
-      clone.querySelector('input').value = '';
-      container.appendChild(clone);
+        const container = document.getElementById('add-requisites-container');
+        const template = container.querySelector('.requisite-group');
+        const clone = template.cloneNode(true);
+        clone.querySelector('select').selectedIndex = 0;
+        clone.querySelector('input').value = '';
+        container.appendChild(clone);
     });
-    // Удаление блока реквизита
     document.body.addEventListener('click', e => {
-      if (e.target.classList.contains('btn-remove-requisite')) {
-        const grp = e.target.closest('.requisite-group');
-        if (grp && grp.parentElement.children.length > 1) grp.remove();
-      }
+        if (e.target.classList.contains('btn-remove-requisite')) {
+            const grp = e.target.closest('.requisite-group');
+            if (grp && grp.parentElement.children.length > 1) grp.remove();
+        }
     });
 </script>
 </body>
