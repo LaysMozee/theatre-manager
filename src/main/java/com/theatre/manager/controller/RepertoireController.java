@@ -1,17 +1,16 @@
 package com.theatre.manager.controller;
 
 import com.theatre.manager.dto.RepertoireDto;
-import com.theatre.manager.dto.RequisiteTransaction;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowCallbackHandler;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.sql.Date;
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.sql.Time;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -21,194 +20,241 @@ import java.util.*;
 @RequestMapping("/repertoire")
 public class RepertoireController {
 
-    private final JdbcTemplate jdbcTemplate;
+    private final JdbcTemplate jdbc;
 
-    public RepertoireController(JdbcTemplate jdbcTemplate) {
-        this.jdbcTemplate = jdbcTemplate;
+    public RepertoireController(JdbcTemplate jdbc) {
+        this.jdbc = jdbc;
     }
 
-    private boolean isAdminOrDirector(HttpSession session) {
+    private boolean isAdmin(HttpSession session) {
         String role = (String) session.getAttribute("workerRole");
         return "admin".equals(role) || "director".equals(role);
     }
 
     @GetMapping
-    public String showRepertoirePage(Model model, HttpSession session) {
-        // 1) Основной репертуар
-        String sql = "SELECT r.repertoire_id, r.performance_id, r.date, r.time, p.title AS performance_title " +
-                "FROM repertoire r JOIN performance p ON r.performance_id = p.performance_id " +
-                "ORDER BY r.date, r.time";
-        List<RepertoireDto> repertoireList = jdbcTemplate.query(sql, (rs, rowNum) -> {
-            RepertoireDto dto = new RepertoireDto();
-            dto.setRepertoireId(rs.getLong("repertoire_id"));
-            dto.setPerformanceId(rs.getLong("performance_id"));
-            dto.setDate(rs.getDate("date").toLocalDate());
-            dto.setTime(rs.getTime("time").toLocalTime());
-            dto.setPerformanceTitle(rs.getString("performance_title"));
-            return dto;
-        });
+    public String repertoirePage(Model model, HttpSession session) {
+        String sql = """
+            SELECT r.repertoire_id, r.date, r.time,
+                   p.performance_id, p.title,
+                   ARRAY(SELECT w.fio
+                         FROM worker w
+                         JOIN repertoire_worker rw ON rw.worker_id = w.worker_id
+                         WHERE rw.repertoire_id = r.repertoire_id) as workers,
+                   ARRAY(
+                       SELECT CONCAT(req.title, ' (', rr.quantity, ')')
+                       FROM repertoire_requisite rr
+                       JOIN requisite req ON req.requisite_id = rr.requisite_id
+                       WHERE rr.repertoire_id = r.repertoire_id
+                   ) as requisites
+            FROM repertoire r
+            JOIN performance p ON p.performance_id = r.performance_id
+            ORDER BY r.date, r.time
+        """;
 
-        // 2) Сотрудники
-        Map<Long, List<String>> workersMap = new HashMap<>();
-        jdbcTemplate.query(
-                "SELECT rw.repertoire_id, w.fio " +
-                        "FROM repertoire_worker rw JOIN worker w ON rw.worker_id = w.worker_id",
-                new RowCallbackHandler() {
-                    @Override
-                    public void processRow(ResultSet rs) throws SQLException {
-                        workersMap
-                                .computeIfAbsent(rs.getLong("repertoire_id"), k -> new ArrayList<>())
-                                .add(rs.getString("fio"));
-                    }
-                }
-        );
-
-        // 3) Реквизит и количество
-        Map<Long, List<RequisiteTransaction>> reqMap = new HashMap<>();
-        jdbcTemplate.query(
-                "SELECT rr.repertoire_id, r.title, rr.quantity " +
-                        "FROM repertoire_requisite rr JOIN requisite r ON rr.requisite_id = r.requisite_id",
-                new RowCallbackHandler() {
-                    @Override
-                    public void processRow(ResultSet rs) throws SQLException {
-                        RequisiteTransaction rt = new RequisiteTransaction();
-                        rt.setTitle(rs.getString("title"));
-                        rt.setQuantity(rs.getInt("quantity"));
-                        reqMap
-                                .computeIfAbsent(rs.getLong("repertoire_id"), k -> new ArrayList<>())
-                                .add(rt);
-                    }
-                }
-        );
-
-        // 4) Заполняем DTO
-        for (RepertoireDto dto : repertoireList) {
-            dto.setWorkerNames(workersMap.getOrDefault(dto.getRepertoireId(), Collections.emptyList()));
-            dto.setRequisites(reqMap.getOrDefault(dto.getRepertoireId(), Collections.emptyList()));
-        }
-
-        model.addAttribute("repertoireList", repertoireList);
-        model.addAttribute("performanceList", jdbcTemplate.queryForList("SELECT performance_id, title FROM performance"));
-        model.addAttribute("workerList", jdbcTemplate.queryForList("SELECT worker_id, fio FROM worker"));
-        model.addAttribute("requisiteList", jdbcTemplate.queryForList("SELECT requisite_id, title FROM requisite"));
-        model.addAttribute("isAdminOrDirector", isAdminOrDirector(session));
+        List<Map<String, Object>> list = jdbc.queryForList(sql);
+        model.addAttribute("repertoireList", list);
+        model.addAttribute("isAdmin", isAdmin(session));
         return "repertoire";
     }
 
-    @PostMapping("/add")
-    public String addRepertoire(@RequestParam Long performanceId,
-                                @RequestParam String date,
-                                @RequestParam String time,
-                                @RequestParam(required = false) List<Long> workerIds,
-                                @RequestParam(required = false) List<Long> requisiteIds,
-                                @RequestParam(required = false) List<Integer> quantities,
-                                HttpSession session) {
-        if (!isAdminOrDirector(session)) {
+    @GetMapping({"/edit", "/edit/{id}"})
+    public String editForm(@PathVariable(required = false) Long id,
+                           Model model,
+                           HttpSession session) {
+        if (!isAdmin(session)) {
             return "redirect:/repertoire?error=accessDenied";
         }
-        jdbcTemplate.update(
-                "INSERT INTO repertoire (performance_id, date, time) VALUES (?, ?, ?)",
-                performanceId,
-                Date.valueOf(LocalDate.parse(date)),
-                Time.valueOf(LocalTime.parse(time))
-        );
-        Long repertoireId = jdbcTemplate.queryForObject(
-                "SELECT currval(pg_get_serial_sequence('repertoire','repertoire_id'))", Long.class);
-        if (workerIds != null) {
-            for (Long w : workerIds) {
-                jdbcTemplate.update("INSERT INTO repertoire_worker (repertoire_id, worker_id) VALUES (?, ?)", repertoireId, w);
+
+        RepertoireDto dto = new RepertoireDto();
+        List<Long> workerIds = new ArrayList<>();
+        List<Long> reqIds = new ArrayList<>();
+        List<Integer> qtys = new ArrayList<>();
+
+        if (id != null) {
+            String sql = "SELECT repertoire_id, performance_id, date, time FROM repertoire WHERE repertoire_id = ?";
+            dto = jdbc.queryForObject(sql, new Object[]{id}, (rs, rn) -> {
+                var d = new RepertoireDto();
+                d.setRepertoireId(rs.getLong("repertoire_id"));
+                d.setPerformanceId(rs.getLong("performance_id"));
+                d.setDate(rs.getDate("date").toLocalDate());
+                d.setTime(rs.getTime("time").toLocalTime());
+                return d;
+            });
+
+            workerIds = jdbc.queryForList("SELECT worker_id FROM repertoire_worker WHERE repertoire_id = ?", Long.class, id);
+            var map = jdbc.queryForList("SELECT requisite_id, quantity FROM repertoire_requisite WHERE repertoire_id = ?", Map.class, id);
+            for (Map<String, Object> row : map) {
+                reqIds.add(((Number) row.get("requisite_id")).longValue());
+                qtys.add(((Number) row.get("quantity")).intValue());
             }
         }
-        if (requisiteIds != null && quantities != null && requisiteIds.size() == quantities.size()) {
-            for (int i = 0; i < requisiteIds.size(); i++) {
-                jdbcTemplate.update(
-                        "INSERT INTO repertoire_requisite (repertoire_id, requisite_id, quantity) VALUES (?, ?, ?)",
-                        repertoireId, requisiteIds.get(i), quantities.get(i)
-                );
-            }
-        }
-        return "redirect:/repertoire";
-    }
-
-    @PostMapping("/delete/{id}")
-    public String deleteRepertoire(@PathVariable Long id, HttpSession session) {
-        if (!isAdminOrDirector(session)) {
-            return "redirect:/repertoire?error=accessDenied";
-        }
-        jdbcTemplate.update("DELETE FROM repertoire_worker WHERE repertoire_id = ?", id);
-        jdbcTemplate.update("DELETE FROM repertoire_requisite WHERE repertoire_id = ?", id);
-        jdbcTemplate.update("DELETE FROM repertoire WHERE repertoire_id = ?", id);
-        return "redirect:/repertoire";
-    }
-
-    @GetMapping("/edit/{id}")
-    public String editRepertoireForm(@PathVariable Long id, Model model, HttpSession session) {
-        if (!isAdminOrDirector(session)) {
-            return "redirect:/repertoire?error=accessDenied";
-        }
-        RepertoireDto dto = jdbcTemplate.queryForObject(
-                "SELECT repertoire_id, performance_id, date, time FROM repertoire WHERE repertoire_id = ?",
-                new Object[]{id},
-                (rs, rn) -> {
-                    RepertoireDto rd = new RepertoireDto();
-                    rd.setRepertoireId(rs.getLong("repertoire_id"));
-                    rd.setPerformanceId(rs.getLong("performance_id"));
-                    rd.setDate(rs.getDate("date").toLocalDate());
-                    rd.setTime(rs.getTime("time").toLocalTime());
-                    return rd;
-                }
-        );
-        List<Long> workerIds = jdbcTemplate.queryForList(
-                "SELECT worker_id FROM repertoire_worker WHERE repertoire_id = ?", Long.class, id);
-        List<Long> reqIds = jdbcTemplate.queryForList(
-                "SELECT requisite_id FROM repertoire_requisite WHERE repertoire_id = ?", Long.class, id);
-        List<Integer> qtys = jdbcTemplate.queryForList(
-                "SELECT quantity FROM repertoire_requisite WHERE repertoire_id = ?", Integer.class, id);
 
         model.addAttribute("repertoire", dto);
         model.addAttribute("workerIds", workerIds);
         model.addAttribute("requisiteIds", reqIds);
         model.addAttribute("quantities", qtys);
-        model.addAttribute("performanceList", jdbcTemplate.queryForList("SELECT performance_id, title FROM performance"));
-        model.addAttribute("workerList", jdbcTemplate.queryForList("SELECT worker_id, fio FROM worker"));
-        model.addAttribute("requisiteList", jdbcTemplate.queryForList("SELECT requisite_id, title FROM requisite"));
+        model.addAttribute("performanceList", jdbc.queryForList("SELECT performance_id, title FROM performance"));
+        model.addAttribute("workerList", jdbc.queryForList("SELECT worker_id, fio FROM worker"));
+        model.addAttribute("requisiteList", jdbc.queryForList("SELECT requisite_id, title FROM requisite"));
+        model.addAttribute("isAdmin", true);
         return "repertoire_edit";
     }
 
-    @PostMapping("/edit/{id}")
-    public String updateRepertoire(@PathVariable Long id,
-                                   @RequestParam Long performanceId,
-                                   @RequestParam String date,
-                                   @RequestParam String time,
-                                   @RequestParam(required = false) List<Long> workerIds,
-                                   @RequestParam(required = false) List<Long> requisiteIds,
-                                   @RequestParam(required = false) List<Integer> quantities,
-                                   HttpSession session) {
-        if (!isAdminOrDirector(session)) {
+    @PostMapping
+    @Transactional
+    public String add(@RequestParam Long performanceId,
+                      @RequestParam String date,
+                      @RequestParam String time,
+                      @RequestParam(required = false) List<Long> workerIds,
+                      @RequestParam(required = false) List<Long> reqIds,
+                      @RequestParam(required = false) List<Integer> qtys,
+                      HttpSession session,
+                      RedirectAttributes ra) {
+        if (!isAdmin(session)) {
             return "redirect:/repertoire?error=accessDenied";
         }
-        jdbcTemplate.update(
-                "UPDATE repertoire SET performance_id = ?, date = ?, time = ? WHERE repertoire_id = ?",
-                performanceId,
-                Date.valueOf(LocalDate.parse(date)),
-                Time.valueOf(LocalTime.parse(time)),
-                id
-        );
-        jdbcTemplate.update("DELETE FROM repertoire_worker WHERE repertoire_id = ?", id);
-        jdbcTemplate.update("DELETE FROM repertoire_requisite WHERE repertoire_id = ?", id);
+
+        // Вставка в таблицу repertoire
+        jdbc.update("INSERT INTO repertoire(performance_id, date, time) VALUES (?, ?, ?)",
+                performanceId, Date.valueOf(LocalDate.parse(date)), Time.valueOf(LocalTime.parse(time)));
+
+        Long repId = jdbc.queryForObject(
+                "SELECT currval(pg_get_serial_sequence('repertoire','repertoire_id'))", Long.class);
+
+        // Вставка связей с работниками
         if (workerIds != null) {
-            for (Long w : workerIds) {
-                jdbcTemplate.update("INSERT INTO repertoire_worker (repertoire_id, worker_id) VALUES (?, ?)", id, w);
+            for (Long wId : workerIds) {
+                if (wId != null) {
+                    jdbc.update("INSERT INTO repertoire_worker(repertoire_id, worker_id) VALUES (?, ?)", repId, wId);
+                }
             }
         }
-        if (requisiteIds != null && quantities != null && requisiteIds.size() == quantities.size()) {
-            for (int i = 0; i < requisiteIds.size(); i++) {
-                jdbcTemplate.update(
-                        "INSERT INTO repertoire_requisite (repertoire_id, requisite_id, quantity) VALUES (?, ?, ?)",
-                        id, requisiteIds.get(i), quantities.get(i)
-                );
+
+        // Проверка и вставка реквизита
+        if (reqIds != null && qtys != null) {
+            if (reqIds.size() != qtys.size()) {
+                ra.addFlashAttribute("error", "Ошибка: количество реквизитов и количеств не совпадает.");
+                return "redirect:/repertoire";
+            }
+
+            for (int i = 0; i < reqIds.size(); i++) {
+                Long rId = reqIds.get(i);
+                Integer needObj = qtys.get(i);
+
+                if (rId == null || needObj == null) {
+                    // Пропускаем пустые записи или можно сообщить ошибку
+                    ra.addFlashAttribute("error", "Ошибка: переданы пустые значения реквизита или количества.");
+                    return "redirect:/repertoire";
+                }
+
+                int need = needObj;
+
+                Integer avail = jdbc.queryForObject(
+                        "SELECT available_quantity FROM requisite WHERE requisite_id = ?", Integer.class, rId);
+
+                if (avail == null) {
+                    ra.addFlashAttribute("error", "Ошибка: реквизит ID=" + rId + " не найден.");
+                    return "redirect:/repertoire";
+                }
+
+                if (avail < need) {
+                    ra.addFlashAttribute("stockError",
+                            "Не хватает реквизита ID=" + rId + ": в наличии " + avail + ", нужно " + need);
+                    return "redirect:/repertoire";
+                }
+
+                // Вставка в repertoire_requisite
+                jdbc.update("INSERT INTO repertoire_requisite(repertoire_id, requisite_id, quantity) VALUES (?, ?, ?)",
+                        repId, rId, need);
+
+                // Вставка в conditions
+                jdbc.queryForObject("""
+                    INSERT INTO conditions(date, condition_type_id, requisite_id, quantity, comment)
+                    VALUES (?, ?, ?, ?, ?)
+                    RETURNING condition_id
+                    """, Long.class, Date.valueOf(LocalDate.now()), 1, rId, need, "Задействовано в репертуаре");
+
+                // Обновление available_quantity
+                jdbc.update("UPDATE requisite SET available_quantity = available_quantity - ? WHERE requisite_id = ?", need, rId);
             }
         }
+
+        return "redirect:/repertoire";
+    }
+
+    @PostMapping("/edit/{id}")
+    @Transactional
+    public String edit(@PathVariable Long id,
+                       @RequestParam Long performanceId,
+                       @RequestParam String date,
+                       @RequestParam String time,
+                       @RequestParam(required = false) List<Long> workerIds,
+                       @RequestParam(required = false) List<Long> reqIds,
+                       @RequestParam(required = false) List<Integer> qtys,
+                       HttpSession session,
+                       RedirectAttributes ra) {
+        if (!isAdmin(session)) return "redirect:/repertoire?error=accessDenied";
+
+        List<Map<String, Object>> oldReqs = jdbc.queryForList(
+                "SELECT requisite_id, quantity FROM repertoire_requisite WHERE repertoire_id = ?", id);
+        for (Map<String, Object> row : oldReqs) {
+            Long reqId = ((Number) row.get("requisite_id")).longValue();
+            Integer qty = ((Number) row.get("quantity")).intValue();
+            jdbc.update("UPDATE requisite SET available_quantity = available_quantity + ? WHERE requisite_id = ?", qty, reqId);
+        }
+
+        jdbc.update("UPDATE repertoire SET performance_id=?, date=?, time=? WHERE repertoire_id=?",
+                performanceId, Date.valueOf(LocalDate.parse(date)), Time.valueOf(LocalTime.parse(time)), id);
+
+        jdbc.update("DELETE FROM repertoire_worker WHERE repertoire_id=?", id);
+        jdbc.update("DELETE FROM repertoire_requisite WHERE repertoire_id=?", id);
+
+        if (workerIds != null) {
+            workerIds.forEach(w -> jdbc.update("INSERT INTO repertoire_worker(repertoire_id, worker_id) VALUES (?, ?)", id, w));
+        }
+
+        if (reqIds != null && qtys != null) {
+            for (int i = 0; i < reqIds.size(); i++) {
+                long rId = reqIds.get(i);
+                int need = qtys.get(i);
+                Integer avail = jdbc.queryForObject("SELECT available_quantity FROM requisite WHERE requisite_id = ?", Integer.class, rId);
+                if (avail == null || avail < need) {
+                    ra.addFlashAttribute("stockError", "Не хватает реквизита ID=" + rId + ": в наличии " + avail + ", нужно " + need);
+                    throw new RuntimeException("Недостаточно реквизита");
+                }
+
+                jdbc.update("INSERT INTO repertoire_requisite(repertoire_id, requisite_id, quantity) VALUES (?, ?, ?)", id, rId, need);
+
+                jdbc.queryForObject("""
+                    INSERT INTO conditions(date, condition_type_id, requisite_id, quantity, comment)
+                    VALUES (?, ?, ?, ?, ?)
+                    RETURNING condition_id
+                """, Long.class, Date.valueOf(LocalDate.now()), 2, rId, need, "Обновлено в репертуаре");
+
+                jdbc.update("UPDATE requisite SET available_quantity = available_quantity - ? WHERE requisite_id = ?", need, rId);
+            }
+        }
+
+        return "redirect:/repertoire";
+    }
+
+    @GetMapping("/delete/{id}")
+    @Transactional
+    public String delete(@PathVariable Long id, HttpSession session) {
+        if (!isAdmin(session)) return "redirect:/repertoire?error=accessDenied";
+
+        List<Map<String, Object>> oldReqs = jdbc.queryForList(
+                "SELECT requisite_id, quantity FROM repertoire_requisite WHERE repertoire_id = ?", id);
+        for (Map<String, Object> row : oldReqs) {
+            Long reqId = ((Number) row.get("requisite_id")).longValue();
+            Integer qty = ((Number) row.get("quantity")).intValue();
+            jdbc.update("UPDATE requisite SET available_quantity = available_quantity + ? WHERE requisite_id = ?", qty, reqId);
+        }
+
+        jdbc.update("DELETE FROM repertoire_worker WHERE repertoire_id=?", id);
+        jdbc.update("DELETE FROM repertoire_requisite WHERE repertoire_id=?", id);
+        jdbc.update("DELETE FROM repertoire WHERE repertoire_id=?", id);
+
         return "redirect:/repertoire";
     }
 }

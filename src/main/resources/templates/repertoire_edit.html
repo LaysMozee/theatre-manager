@@ -1,33 +1,89 @@
-<form th:action="@{${repertoire.repertoireId} != null ? '/repertoire/edit/' + ${repertoire.repertoireId} : '/repertoire/add'}"
-      method="post" xmlns:th="http://www.w3.org/1999/xhtml">
-  <div>
-    <label>Дата</label>
-    <input type="date" name="date" th:value="${repertoire.date}" required/>
-  </div>
-  <div>
-    <label>Время</label>
-    <input type="time" name="time" th:value="${repertoire.time}" required/>
-  </div>
-  <div>
-    <label>Спектакль</label>
-    <select name="performanceId" required>
-      <option th:each="perf : ${performanceList}" th:value="${perf.performance_id}" th:text="${perf.title}" th:selected="${perf.performance_id == repertoire.performanceId}"></option>
-    </select>
-  </div>
-  <div>
-    <label>Работники</label>
-    <div th:each="worker : ${workerList}">
-      <input type="checkbox" name="workerIds" th:value="${worker.worker_id}" th:checked="${workerIds != null and workerIds.contains(worker.worker_id)}"/> <span th:text="${worker.fio}"></span><br/>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title th:text="${repertoire.repertoireId != null ? 'Редактировать' : 'Добавить'} + ' спектакль'">Форма репертуара</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+</head>
+<body class="bg-light">
+<div class="container py-4">
+  <h2 th:text="${repertoire.repertoireId != null ? 'Редактировать' : 'Добавить'} + ' спектакль'"></h2>
+
+  <form th:action="@{/repertoire}" method="post">
+
+  <div class="mb-3">
+      <label for="performanceId" class="form-label">Спектакль</label>
+      <select id="performanceId" name="performanceId" class="form-select" required>
+        <option value="">-- Выберите спектакль --</option>
+        <option th:each="p : ${performanceList}"
+                th:value="${p.performance_id}"
+                th:selected="${p.performance_id == repertoire.performanceId}"
+                th:text="${p.title}">Спектакль</option>
+      </select>
     </div>
-  </div>
-  <div>
-    <label>Реквизиты и количество</label>
-    <div th:each="req, iterStat : ${requisiteList}">
-      <input type="checkbox" name="requisiteIds" th:value="${req.requisite_id}" th:checked="${requisiteIds != null and requisiteIds.contains(req.requisite_id)}"/>
-      <span th:text="${req.title}"></span>
-      <input type="number" name="quantities" min="0" th:value="${quantities != null and quantities.size() > iterStat.index ? quantities[iterStat.index] : 0}"/>
-      <br/>
+
+    <div class="row">
+      <div class="col-md-6 mb-3">
+        <label for="date" class="form-label">Дата</label>
+        <input type="date" id="date" name="date" class="form-control"
+               th:value="${repertoire.date}" required />
+      </div>
+      <div class="col-md-6 mb-3">
+        <label for="time" class="form-label">Время</label>
+        <input type="time" id="time" name="time" class="form-control"
+               th:value="${repertoire.time}" required />
+      </div>
     </div>
-  </div>
-  <button type="submit">Сохранить</button>
-</form>
+
+    <!-- Сотрудники -->
+    <div class="mb-3">
+      <label class="form-label">Сотрудники</label>
+      <div class="form-check" th:each="worker : ${workerList}">
+        <input class="form-check-input"
+               type="checkbox"
+               th:name="workerIds"
+               th:id="'worker_' + ${worker.worker_id}"
+               th:value="${worker.worker_id}"
+               th:checked="${workerIds != null and workerIds.contains(worker.worker_id)}" />
+        <label class="form-check-label" th:for="'worker_' + ${worker.worker_id}"
+               th:text="${worker.fio}">ФИО</label>
+      </div>
+    </div>
+
+    <!-- Реквизиты -->
+    <div class="mb-3">
+      <label class="form-label">Реквизиты</label>
+      <div class="row" th:each="req, i : ${requisiteList}">
+        <div class="col-md-6">
+          <div class="form-check">
+            <input class="form-check-input"
+                   type="checkbox"
+                   th:id="'req_' + ${req.requisite_id}"
+                   th:name="reqIds"
+                   th:value="${req.requisite_id}"
+                   th:checked="${requisiteIds != null and requisiteIds.contains(req.requisite_id)}"/>
+            <label class="form-check-label"
+                   th:for="'req_' + ${req.requisite_id}"
+                   th:text="${req.title}">Название реквизита</label>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <input type="number"
+                 min="1"
+                 class="form-control"
+                 th:name="qtys"
+                 placeholder="Количество"
+                 th:value="${requisiteIds != null and requisiteIds.contains(req.requisite_id) ?
+                                     quantities[requisiteIds.indexOf(req.requisite_id)] : ''}" />
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-content-between">
+      <a class="btn btn-secondary" href="/repertoire">Назад</a>
+      <button type="submit" class="btn btn-primary">Сохранить</button>
+    </div>
+  </form>
+</div>
+</body>
+</html>
