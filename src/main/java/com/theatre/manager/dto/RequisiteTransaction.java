@@ -3,12 +3,12 @@ package com.theatre.manager.dto;
 public class RequisiteTransaction {
     private String title;
     private int quantity;
-    private Object requisiteId;
+    private long requisiteId;
 
     public RequisiteTransaction() {
     }
 
-    public RequisiteTransaction(long aLong, String title, int quantity) {
+    public RequisiteTransaction(String title, int quantity) {
         this.title = title;
         this.quantity = quantity;
     }
@@ -29,11 +29,11 @@ public class RequisiteTransaction {
         this.quantity = quantity;
     }
 
-    public Object getRequisiteId() {
-        return requisiteId;
+    public void setRequisiteId(long requisiteId) {
+        this.requisiteId = requisiteId;
     }
 
-    public void setRequisiteId(Object requisiteId) {
-        this.requisiteId = requisiteId;
+    public long getRequisiteId() {
+        return requisiteId;
     }
 }
