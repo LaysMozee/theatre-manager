@@ -3,13 +3,19 @@ package com.theatre.manager.model;
 import java.time.LocalDate;
 
 public class Condition {
-    private Long conditionId;        // <-- добавлено
+    private Long conditionId;
     private Long requisiteId;
-    private Integer conditionTypeId;
     private LocalDate date;
-    private String comment;
     private int quantity;
+    private String comment;
+    private int conditionTypeId;
 
+    // Дополнительные поля для отображения
+    private String requisiteTitle;
+    private String conditionTypeName;
+    private String performanceTitle;
+
+    // Геттеры и сеттеры
     public Long getConditionId() {
         return conditionId;
     }
@@ -26,20 +32,20 @@ public class Condition {
         this.requisiteId = requisiteId;
     }
 
-    public Integer getConditionTypeId() {
-        return conditionTypeId;
-    }
-
-    public void setConditionTypeId(Integer conditionTypeId) {
-        this.conditionTypeId = conditionTypeId;
-    }
-
     public LocalDate getDate() {
         return date;
     }
 
     public void setDate(LocalDate date) {
         this.date = date;
+    }
+
+    public int getQuantity() {
+        return quantity;
+    }
+
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
     }
 
     public String getComment() {
@@ -50,11 +56,35 @@ public class Condition {
         this.comment = comment;
     }
 
-    public int getQuantity() {
-        return quantity;
+    public int getConditionTypeId() {
+        return conditionTypeId;
     }
 
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
+    public void setConditionTypeId(int conditionTypeId) {
+        this.conditionTypeId = conditionTypeId;
+    }
+
+    public String getRequisiteTitle() {
+        return requisiteTitle;
+    }
+
+    public void setRequisiteTitle(String requisiteTitle) {
+        this.requisiteTitle = requisiteTitle;
+    }
+
+    public String getConditionTypeName() {
+        return conditionTypeName;
+    }
+
+    public void setConditionTypeName(String conditionTypeName) {
+        this.conditionTypeName = conditionTypeName;
+        
+    }
+    public String getPerformanceTitle() {
+        return performanceTitle;
+    }
+
+    public void setPerformanceTitle(String performanceTitle) {
+        this.performanceTitle = performanceTitle;
     }
 }

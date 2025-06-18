@@ -4,6 +4,7 @@ public class RequisiteTransaction {
     private String title;
     private int quantity;
     private long requisiteId;
+    private int availableQuantity;
 
     public RequisiteTransaction() {
     }
@@ -35,5 +36,13 @@ public class RequisiteTransaction {
 
     public long getRequisiteId() {
         return requisiteId;
+    }
+
+    public void setAvailableQuantity(int availableQuantity) {
+        this.availableQuantity = availableQuantity;
+    }
+
+    public int getAvailableQuantity() {
+        return availableQuantity;
     }
 }

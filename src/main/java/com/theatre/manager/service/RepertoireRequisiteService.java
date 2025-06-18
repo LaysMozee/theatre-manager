@@ -19,10 +19,6 @@ public class RepertoireRequisiteService {
     public List<RepertoireRequisiteDto> findByRepertoireId(Long repertoireId) {
         String sql = "SELECT id, repertoire_id, requisite_id, quantity FROM repertoire_requisite WHERE repertoire_id = ?";
         return jdbcTemplate.query(sql, (rs, rowNum) -> new RepertoireRequisiteDto(
-                rs.getLong("id"),
-                rs.getLong("repertoire_id"),
-                rs.getLong("requisite_id"),
-                rs.getInt("quantity")
         ), repertoireId);
     }
 

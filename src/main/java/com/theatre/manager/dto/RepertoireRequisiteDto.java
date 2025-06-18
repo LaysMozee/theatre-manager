@@ -1,42 +1,41 @@
 package com.theatre.manager.dto;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 public class RepertoireRequisiteDto {
-    private Long id;
-    private Long repertoireId;
-    private Long requisiteId;
+    private String requisiteTitle;
+    private String performanceTitle;
+    private LocalDate date;
     private int quantity;
+    private LocalTime time;
 
-    public RepertoireRequisiteDto() {}
-
-    public RepertoireRequisiteDto(Long id, Long repertoireId, Long requisiteId, int quantity) {
-        this.id = id;
-        this.repertoireId = repertoireId;
-        this.requisiteId = requisiteId;
-        this.quantity = quantity;
+    public RepertoireRequisiteDto() {
     }
 
-    public Long getId() {
-        return id;
+    // getters and setters
+    public String getRequisiteTitle() {
+        return requisiteTitle;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setRequisiteTitle(String requisiteTitle) {
+        this.requisiteTitle = requisiteTitle;
     }
 
-    public Long getRepertoireId() {
-        return repertoireId;
+    public String getPerformanceTitle() {
+        return performanceTitle;
     }
 
-    public void setRepertoireId(Long repertoireId) {
-        this.repertoireId = repertoireId;
+    public void setPerformanceTitle(String performanceTitle) {
+        this.performanceTitle = performanceTitle;
     }
 
-    public Long getRequisiteId() {
-        return requisiteId;
+    public LocalDate getDate() {
+        return date;
     }
 
-    public void setRequisiteId(Long requisiteId) {
-        this.requisiteId = requisiteId;
+    public void setDate(LocalDate date) {
+        this.date = date;
     }
 
     public int getQuantity() {
@@ -45,5 +44,13 @@ public class RepertoireRequisiteDto {
 
     public void setQuantity(int quantity) {
         this.quantity = quantity;
+    }
+
+    public void setTime(LocalTime time) {
+        this.time = time;
+    }
+
+    public LocalTime getTime() {
+        return time;
     }
 }

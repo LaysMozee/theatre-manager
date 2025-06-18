@@ -1,17 +1,18 @@
 package com.theatre.manager.model;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 public class ConditionWithTitle {
     private Long conditionId;
     private Long requisiteId;
-    private String title;
-    private String conditionTypeTitle;
+    private LocalDate date;
     private int quantity;
-    private Date date;
     private String comment;
+    private int conditionTypeId;
+    private String requisiteTitle;
+    private String conditionTypeName;
 
-    // Геттеры и сеттеры для всех полей
+    // Геттеры и сеттеры
     public Long getConditionId() {
         return conditionId;
     }
@@ -28,20 +29,12 @@ public class ConditionWithTitle {
         this.requisiteId = requisiteId;
     }
 
-    public String getTitle() {
-        return title;
+    public LocalDate getDate() {
+        return date;
     }
 
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getConditionTypeTitle() {
-        return conditionTypeTitle;
-    }
-
-    public void setConditionTypeTitle(String conditionTypeTitle) {
-        this.conditionTypeTitle = conditionTypeTitle;
+    public void setDate(LocalDate date) {
+        this.date = date;
     }
 
     public int getQuantity() {
@@ -52,19 +45,35 @@ public class ConditionWithTitle {
         this.quantity = quantity;
     }
 
-    public Date getDate() {
-        return date;
-    }
-
-    public void setDate(Date date) {
-        this.date = date;
-    }
-
     public String getComment() {
         return comment;
     }
 
     public void setComment(String comment) {
         this.comment = comment;
+    }
+
+    public int getConditionTypeId() {
+        return conditionTypeId;
+    }
+
+    public void setConditionTypeId(int conditionTypeId) {
+        this.conditionTypeId = conditionTypeId;
+    }
+
+    public String getRequisiteTitle() {
+        return requisiteTitle;
+    }
+
+    public void setRequisiteTitle(String requisiteTitle) {
+        this.requisiteTitle = requisiteTitle;
+    }
+
+    public String getConditionTypeName() {
+        return conditionTypeName;
+    }
+
+    public void setConditionTypeName(String conditionTypeName) {
+        this.conditionTypeName = conditionTypeName;
     }
 }

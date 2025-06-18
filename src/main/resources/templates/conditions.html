@@ -1,63 +1,131 @@
 <!DOCTYPE html>
-<html lang="ru" xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8" />
-    <title>Состояния реквизита</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <meta charset="UTF-8">
+    <title>Управление состоянием реквизита</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<div class="container mt-5">
-    <h1>Состояния реквизита</h1>
+<div class="container mt-4">
+    <h1>Управление состоянием реквизита</h1>
 
-    <!-- Ссылка-переключатель на «Реквизиты» -->
-    <div class="mb-3">
-        <a href="/requisites" class="btn btn-outline-secondary">Перейти к «Реквизитам»</a>
+    <!-- Сообщения об ошибках/успехе -->
+    <div th:if="${param.error}" class="alert alert-danger">
+        <span th:switch="${param.error}">
+            <span th:case="'access_denied'">Доступ запрещен!</span>
+            <span th:case="'save_failed'">Ошибка сохранения!</span>
+            <span th:case="'update_failed'">Ошибка обновления!</span>
+            <span th:case="'delete_failed'">Ошибка удаления!</span>
+        </span>
+    </div>
+    <div th:if="${param.success}" class="alert alert-success">Операция выполнена успешно!</div>
+
+    <!-- Форма добавления нового состояния -->
+    <div th:if="${isAdminOrDecorator}" class="card mb-4">
+        <div class="card-header">Добавить состояние реквизита</div>
+        <div class="card-body">
+            <form th:action="@{/condition/save}" method="post">
+                <div class="mb-3">
+                    <label class="form-label">Реквизит</label>
+                    <select name="requisiteId" class="form-select" required>
+                        <option value="">Выберите реквизит</option>
+                        <option th:each="req : ${requisites}"
+                                th:value="${req.requisiteId}"
+                                th:text="${req.title + ' (Доступно: ' + req.availableQuantity + ')'}"></option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Тип состояния</label>
+                    <select name="conditionTypeId" class="form-select" required>
+                        <option value="">Выберите тип</option>
+                        <option th:each="type : ${conditionTypes}"
+                                th:value="${type.conditionTypeId}"
+                                th:text="${type.name}"></option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Количество</label>
+                    <input type="number" name="quantity" class="form-control" min="1" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Комментарий</label>
+                    <textarea name="comment" class="form-control"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+            </form>
+        </div>
     </div>
 
-    <!-- Кнопка «Добавить состояние» -->
-    <div th:if="${workerRole == 'admin' or workerRole == 'decorator'}" class="mb-3">
-        <a href="/condition/add" class="btn btn-primary">Добавить состояние</a>
+    <!-- Список задействованного реквизита -->
+    <div class="card mb-4">
+        <div class="card-header">Реквизит, используемый в репертуаре</div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Реквизит</th>
+                    <th>Спектакль</th>
+                    <th>Дата</th>
+                    <th>Время</th>
+                    <th>Количество</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="used : ${usedRequisites}" th:if="${not #lists.isEmpty(usedRequisites)}">
+                    <td th:text="${used.requisiteTitle}"></td>
+                    <td th:text="${used.performanceTitle}"></td>
+                    <td th:text="${#temporals.format(used.date, 'dd.MM.yyyy')}"></td>
+                    <td th:text="${#temporals.format(used.time, 'HH:mm')}"></td>
+                    <td th:text="${used.quantity}"></td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(usedRequisites)}">
+                    <td colspan="5" class="text-center">Нет данных</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
-
-    <table class="table table-striped table-bordered align-middle">
-        <thead class="table-dark">
-        <tr>
-            <th>ID</th>
-            <th>ID реквизита</th>
-            <th>Название реквизита</th>
-            <th>Тип состояния</th>
-            <th>Дата</th>
-            <th>Действия</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="cond : ${conditions}">
-            <td th:text="${cond.conditionId}">1</td>
-            <td th:text="${cond.requisiteId}">10</td>
-            <td th:text="${cond.title}">Шляпа</td>
-            <td th:text="${cond.conditionTypeTitle}">Утерян</td>
-            <td th:text="${#dates.format(cond.date, 'dd.MM.yyyy')}">02.06.2025</td>
-            <td>
-                <a th:if="${workerRole == 'admin' or workerRole == 'decorator'}"
-                   th:href="@{/condition/edit/{id}(id=${cond.conditionId})}"
-                   class="btn btn-sm btn-outline-primary" title="Редактировать">
-                    <i class="bi bi-pencil"></i>
-                </a>
-                <a th:if="${workerRole == 'admin' or workerRole == 'decorator'}"
-                   th:href="@{/condition/delete/{id}(id=${cond.conditionId})}"
-                   onclick="return confirm('Удалить состояние?')"
-                   class="btn btn-sm btn-outline-danger" title="Удалить">
-                    <i class="bi bi-trash"></i>
-                </a>
-
-            </td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(conditions)}">
-            <td colspan="6" class="text-center">Записи о состояниях отсутствуют</td>
-        </tr>
-        </tbody>
-    </table>
-</div>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- In the "История изменений состояний" section -->
+    <!-- In the "История изменений состояний" section -->
+    <div class="card">
+        <div class="card-header">История изменений состояний</div>
+        <div class="card-body">
+            <table class="table">
+                <thead>
+                <tr>
+                    <th>Дата</th>
+                    <th>Реквизит</th>
+                    <th>Тип</th>
+                    <th>Количество</th>
+                    <th>Спектакль</th>
+                    <th>Комментарий</th>
+                    <th th:if="${isAdmin}">Действия</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="cond : ${conditions}" th:if="${not #lists.isEmpty(conditions)}">
+                    <td th:text="${#temporals.format(cond.date, 'dd.MM.yyyy')}"></td>
+                    <td th:text="${cond.requisiteTitle}"></td>
+                    <td th:text="${cond.conditionTypeName}"></td>
+                    <td th:text="${cond.quantity}"></td>
+                    <td>
+                        <span th:if="${cond.conditionTypeId == 7}" th:text="${cond.performanceTitle}"></span>
+                        <span th:unless="${cond.conditionTypeId == 7}">-</span>
+                    </td>
+                    <td th:text="${cond.comment}"></td>
+                    <td th:if="${isAdmin}">
+                        <a th:href="@{'/condition/delete/' + ${cond.conditionId}}"
+                           class="btn btn-sm btn-danger"
+                           onclick="return confirm('Удалить запись?')">Удалить</a>
+                    </td>
+                </tr>
+                <tr th:if="${#lists.isEmpty(conditions)}">
+                    <td colspan="7" class="text-center">Нет данных</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    </div>
 </body>
 </html>
