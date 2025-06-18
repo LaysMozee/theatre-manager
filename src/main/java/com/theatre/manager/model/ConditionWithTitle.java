@@ -5,12 +5,29 @@ import java.time.LocalDate;
 public class ConditionWithTitle {
     private Long conditionId;
     private Long requisiteId;
-    private LocalDate date;
-    private int quantity;
-    private String comment;
-    private int conditionTypeId;
     private String requisiteTitle;
+    private Integer conditionTypeId;
     private String conditionTypeName;
+    private Integer quantity;
+    private String comment;
+    private LocalDate date;
+
+    // Конструкторы
+    public ConditionWithTitle() {
+    }
+
+    public ConditionWithTitle(Long conditionId, Long requisiteId, String requisiteTitle,
+                              Integer conditionTypeId, String conditionTypeName,
+                              Integer quantity, String comment, LocalDate date) {
+        this.conditionId = conditionId;
+        this.requisiteId = requisiteId;
+        this.requisiteTitle = requisiteTitle;
+        this.conditionTypeId = conditionTypeId;
+        this.conditionTypeName = conditionTypeName;
+        this.quantity = quantity;
+        this.comment = comment;
+        this.date = date;
+    }
 
     // Геттеры и сеттеры
     public Long getConditionId() {
@@ -29,19 +46,35 @@ public class ConditionWithTitle {
         this.requisiteId = requisiteId;
     }
 
-    public LocalDate getDate() {
-        return date;
+    public String getRequisiteTitle() {
+        return requisiteTitle;
     }
 
-    public void setDate(LocalDate date) {
-        this.date = date;
+    public void setRequisiteTitle(String requisiteTitle) {
+        this.requisiteTitle = requisiteTitle;
     }
 
-    public int getQuantity() {
+    public Integer getConditionTypeId() {
+        return conditionTypeId;
+    }
+
+    public void setConditionTypeId(Integer conditionTypeId) {
+        this.conditionTypeId = conditionTypeId;
+    }
+
+    public String getConditionTypeName() {
+        return conditionTypeName;
+    }
+
+    public void setConditionTypeName(String conditionTypeName) {
+        this.conditionTypeName = conditionTypeName;
+    }
+
+    public Integer getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(int quantity) {
+    public void setQuantity(Integer quantity) {
         this.quantity = quantity;
     }
 
@@ -53,27 +86,26 @@ public class ConditionWithTitle {
         this.comment = comment;
     }
 
-    public int getConditionTypeId() {
-        return conditionTypeId;
+    public LocalDate getDate() {
+        return date;
     }
 
-    public void setConditionTypeId(int conditionTypeId) {
-        this.conditionTypeId = conditionTypeId;
+    public void setDate(LocalDate date) {
+        this.date = date;
     }
 
-    public String getRequisiteTitle() {
-        return requisiteTitle;
-    }
-
-    public void setRequisiteTitle(String requisiteTitle) {
-        this.requisiteTitle = requisiteTitle;
-    }
-
-    public String getConditionTypeName() {
-        return conditionTypeName;
-    }
-
-    public void setConditionTypeName(String conditionTypeName) {
-        this.conditionTypeName = conditionTypeName;
+    // toString для удобства отладки
+    @Override
+    public String toString() {
+        return "ConditionWithTitle{" +
+                "conditionId=" + conditionId +
+                ", requisiteId=" + requisiteId +
+                ", requisiteTitle='" + requisiteTitle + '\'' +
+                ", conditionTypeId=" + conditionTypeId +
+                ", conditionTypeName='" + conditionTypeName + '\'' +
+                ", quantity=" + quantity +
+                ", comment='" + comment + '\'' +
+                ", date=" + date +
+                '}';
     }
 }

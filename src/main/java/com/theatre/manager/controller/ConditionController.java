@@ -3,7 +3,6 @@ package com.theatre.manager.controller;
 import com.theatre.manager.dao.ConditionDao;
 import com.theatre.manager.dao.RequisiteDao;
 import com.theatre.manager.dto.RepertoireRequisiteDto;
-import com.theatre.manager.entity.Requisite;
 import com.theatre.manager.enums.WorkerRole;
 import com.theatre.manager.model.Condition;
 import com.theatre.manager.model.ConditionType;
@@ -36,23 +35,15 @@ public class ConditionController {
         }
 
         try {
-            // 1. Get all requisites
             List<Map<String, Object>> requisites = jdbcTemplate.queryForList(
                     "SELECT requisite_id, title, available_quantity FROM requisite");
 
             List<Condition> conditions = jdbcTemplate.query(
                     "SELECT c.condition_id, c.requisite_id, r.title as requisite_title, " +
-                            "c.condition_type_id, ct.condition_type_name, " +
-                            "c.quantity, c.comment, c.date, " +
-                            "COALESCE(p.title, '') as performance_title " +
+                            "c.condition_type_id, ct.condition_type_name, c.quantity, c.comment, c.date " +
                             "FROM conditions c " +
                             "JOIN requisite r ON c.requisite_id = r.requisite_id " +
                             "JOIN condition_type ct ON c.condition_type_id = ct.condition_type_id " +
-                            "LEFT JOIN repertoire_requisite rr ON c.comment LIKE 'Задействован в репертуаре ID %' " +
-                            "LEFT JOIN repertoire rep ON c.comment LIKE 'Задействован в репертуаре ID %' AND " +
-                            "rep.repertoire_id = CASE WHEN c.comment ~ '^Задействован в репертуаре ID \\d+$' THEN " +
-                            "CAST(SUBSTRING(c.comment, 26) AS INTEGER) ELSE NULL END " +
-                            "LEFT JOIN performance p ON rep.performance_id = p.performance_id " +
                             "ORDER BY c.date DESC",
                     (rs, rowNum) -> {
                         Condition condition = new Condition();
@@ -60,14 +51,13 @@ public class ConditionController {
                         condition.setRequisiteId(rs.getLong("requisite_id"));
                         condition.setRequisiteTitle(rs.getString("requisite_title"));
                         condition.setConditionTypeId(rs.getInt("condition_type_id"));
-                        condition.setConditionTypeName(rs.getString("condition_type_name"));
+                        condition.setConditionTypeName(rs.getString("condition_type_name")); // Используем правильное имя колонки
                         condition.setQuantity(rs.getInt("quantity"));
                         condition.setComment(rs.getString("comment"));
                         condition.setDate(rs.getDate("date").toLocalDate());
-                        condition.setPerformanceTitle(rs.getString("performance_title"));
                         return condition;
                     });
-            // 3. Get requisites used in repertoire (simplified)
+
             List<RepertoireRequisiteDto> usedRequisites = jdbcTemplate.query(
                     "SELECT r.title as requisite_title, p.title as performance_title, " +
                             "rr.quantity, rp.date, rp.time " +
@@ -95,44 +85,52 @@ public class ConditionController {
 
         } catch (Exception e) {
             model.addAttribute("error", "Ошибка при загрузке данных: " + e.getMessage());
-            e.printStackTrace(); // Добавьте логирование ошибки
+            e.printStackTrace();
         }
 
         return "conditions";
     }
 
-    @GetMapping("/conditions/types")
-    @ResponseBody
-    public List<ConditionType> getAllConditionTypes() {
-        return conditionDao.findAllConditionTypes();
-    }
-
-    @GetMapping("/conditions/with-titles")
-    public String getConditionsWithTitles(Model model) {
-        model.addAttribute("conditions", conditionDao.findAllWithRequisiteTitles());
-        return "conditions-list"; // Имя вашего Thymeleaf шаблона
-    }
     @PostMapping("/condition/save")
-    public String saveCondition(@ModelAttribute Condition condition, HttpSession session) {
+    public String saveCondition(@RequestParam Long requisiteId,
+                                @RequestParam Integer conditionTypeId,
+                                @RequestParam Integer quantity,
+                                @RequestParam(required = false) String comment,
+                                HttpSession session) {
         if (!hasAccess(session, WorkerRole.ADMIN, WorkerRole.DECORATOR)) {
             return "redirect:/conditions?error=access_denied";
         }
 
         try {
-            // Обновляем available_quantity в requisite
-            if (condition.getConditionTypeId() == 7) { // Задействован
-                jdbcTemplate.update(
-                        "UPDATE requisite SET available_quantity = available_quantity - ? WHERE requisite_id = ?",
-                        condition.getQuantity(), condition.getRequisiteId());
-            } else {
-                // Для других типов условий (например, списание)
-                jdbcTemplate.update(
-                        "UPDATE requisite SET available_quantity = available_quantity - ? WHERE requisite_id = ?",
-                        condition.getQuantity(), condition.getRequisiteId());
+            // Проверка доступного количества
+            Integer available = jdbcTemplate.queryForObject(
+                    "SELECT available_quantity FROM requisite WHERE requisite_id = ?",
+                    Integer.class, requisiteId);
+
+            if (available == null || available < quantity) {
+                return "redirect:/conditions?error=not_enough";
             }
 
-            // Сохраняем запись в conditions
+            // Обновление количества реквизита
+            if (conditionTypeId == 7) { // Задействован
+                jdbcTemplate.update(
+                        "UPDATE requisite SET available_quantity = available_quantity - ? WHERE requisite_id = ?",
+                        quantity, requisiteId);
+            } else {
+                // Для других типов состояний (повреждение, утеря и т.д.)
+                jdbcTemplate.update(
+                        "UPDATE requisite SET available_quantity = available_quantity - ? WHERE requisite_id = ?",
+                        quantity, requisiteId);
+            }
+
+            // Сохранение состояния
+            Condition condition = new Condition();
+            condition.setRequisiteId(requisiteId);
+            condition.setConditionTypeId(conditionTypeId);
+            condition.setQuantity(quantity);
+            condition.setComment(comment);
             condition.setDate(LocalDate.now());
+
             conditionDao.addCondition(condition);
 
             return "redirect:/conditions?success=true";
@@ -141,48 +139,30 @@ public class ConditionController {
         }
     }
 
-    @PostMapping("/condition/update")
-    public String updateCondition(@ModelAttribute Condition condition, HttpSession session) {
+    @GetMapping("/condition/delete/{id}")
+    public String deleteCondition(@PathVariable Long id, HttpSession session) {
         if (!hasAccess(session, WorkerRole.ADMIN)) {
             return "redirect:/conditions?error=access_denied";
         }
 
         try {
-            Condition oldCondition = conditionDao.findById(condition.getConditionId());
+            Condition condition = conditionDao.findById(id);
+            if (condition == null) {
+                return "redirect:/conditions?error=not_found";
+            }
 
-            // Возвращаем старое количество
+            // Проверка, используется ли реквизит в репертуаре
+            boolean isUsed = conditionDao.isRequisiteUsedInRepertoire(condition.getRequisiteId());
+            if (condition.getConditionTypeId() == 7 || isUsed) {
+                return "redirect:/conditions?error=cannot_delete_used";
+            }
+
+            // Возвращаем количество
             jdbcTemplate.update(
                     "UPDATE requisite SET available_quantity = available_quantity + ? WHERE requisite_id = ?",
-                    oldCondition.getQuantity(), oldCondition.getRequisiteId());
-
-            // Применяем новое количество
-            jdbcTemplate.update(
-                    "UPDATE requisite SET available_quantity = available_quantity - ? WHERE requisite_id = ?",
                     condition.getQuantity(), condition.getRequisiteId());
 
-            conditionDao.updateCondition(condition);
-            return "redirect:/conditions?success=true";
-        } catch (Exception e) {
-            return "redirect:/conditions?error=update_failed";
-        }
-    }
-
-    @GetMapping("/condition/delete/{conditionId}")
-    public String deleteCondition(@PathVariable Long conditionId, HttpSession session) {
-        if (!hasAccess(session, WorkerRole.ADMIN)) {
-            return "redirect:/conditions?error=access_denied";
-        }
-
-        try {
-            Condition condition = conditionDao.findById(conditionId);
-            if (condition != null) {
-                // Возвращаем количество
-                jdbcTemplate.update(
-                        "UPDATE requisite SET available_quantity = available_quantity + ? WHERE requisite_id = ?",
-                        condition.getQuantity(), condition.getRequisiteId());
-
-                conditionDao.deleteById(conditionId);
-            }
+            conditionDao.deleteById(id);
             return "redirect:/conditions?success=true";
         } catch (Exception e) {
             return "redirect:/conditions?error=delete_failed";
