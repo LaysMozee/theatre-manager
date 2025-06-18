@@ -44,6 +44,7 @@ public class ConditionController {
                             "FROM conditions c " +
                             "JOIN requisite r ON c.requisite_id = r.requisite_id " +
                             "JOIN condition_type ct ON c.condition_type_id = ct.condition_type_id " +
+                            "WHERE c.condition_type_id != 7 " +  // Add this condition
                             "ORDER BY c.date DESC",
                     (rs, rowNum) -> {
                         Condition condition = new Condition();
@@ -51,7 +52,7 @@ public class ConditionController {
                         condition.setRequisiteId(rs.getLong("requisite_id"));
                         condition.setRequisiteTitle(rs.getString("requisite_title"));
                         condition.setConditionTypeId(rs.getInt("condition_type_id"));
-                        condition.setConditionTypeName(rs.getString("condition_type_name")); // Используем правильное имя колонки
+                        condition.setConditionTypeName(rs.getString("condition_type_name"));
                         condition.setQuantity(rs.getInt("quantity"));
                         condition.setComment(rs.getString("comment"));
                         condition.setDate(rs.getDate("date").toLocalDate());
@@ -141,34 +142,13 @@ public class ConditionController {
 
     @GetMapping("/condition/delete/{id}")
     public String deleteCondition(@PathVariable Long id, HttpSession session) {
-        if (!hasAccess(session, WorkerRole.ADMIN)) {
-            return "redirect:/conditions?error=access_denied";
-        }
-
         try {
-            Condition condition = conditionDao.findById(id);
-            if (condition == null) {
-                return "redirect:/conditions?error=not_found";
-            }
-
-            // Проверка, используется ли реквизит в репертуаре
-            boolean isUsed = conditionDao.isRequisiteUsedInRepertoire(condition.getRequisiteId());
-            if (condition.getConditionTypeId() == 7 || isUsed) {
-                return "redirect:/conditions?error=cannot_delete_used";
-            }
-
-            // Возвращаем количество
-            jdbcTemplate.update(
-                    "UPDATE requisite SET available_quantity = available_quantity + ? WHERE requisite_id = ?",
-                    condition.getQuantity(), condition.getRequisiteId());
-
             conditionDao.deleteById(id);
             return "redirect:/conditions?success=true";
         } catch (Exception e) {
             return "redirect:/conditions?error=delete_failed";
         }
     }
-
     private boolean hasAccess(HttpSession session, WorkerRole... roles) {
         Object roleAttr = session.getAttribute("workerRole");
         if (roleAttr == null) return false;
