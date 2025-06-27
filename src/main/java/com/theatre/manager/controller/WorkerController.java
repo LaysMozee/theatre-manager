@@ -4,10 +4,12 @@ import com.theatre.manager.entity.Worker;
 import com.theatre.manager.repository.WorkerRepository;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -26,7 +28,7 @@ public class WorkerController {
         this.workerRepository = workerRepository;
     }
 
-    // Отображение списка сотрудников с опциональным фильтром
+    // Отображение списка сотрудников
     @GetMapping
     public String listWorkers(Model model,
                               HttpSession session,
@@ -130,11 +132,27 @@ public class WorkerController {
 
     // Удаление сотрудника (только для админа)
     @PostMapping("/delete/{id}")
-    public String deleteWorker(@PathVariable Long id, HttpSession session) {
+    public String deleteWorker(@PathVariable Long id,
+                               HttpSession session,
+                               RedirectAttributes redirectAttributes) {
         if (!isAdmin(session)) {
             return "redirect:/workers";
         }
-        workerRepository.deleteById(id);
+
+        try {
+            workerRepository.deleteById(id);
+        } catch (DataIntegrityViolationException e) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Нельзя удалить сотрудника, так как он участвует в репетициях или других мероприятиях. " +
+                            "Сначала удалите все связанные записи.");
+            return "redirect:/workers";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage",
+                    "Произошла ошибка при удалении сотрудника: " + e.getMessage());
+            return "redirect:/workers";
+        }
+
+        redirectAttributes.addFlashAttribute("successMessage", "Сотрудник успешно удален");
         return "redirect:/workers";
     }
 
@@ -144,7 +162,7 @@ public class WorkerController {
         return role != null && role.equalsIgnoreCase("admin");
     }
 
-    // Сохраняем фото на диск и возвращаем имя файла
+    //  фото на диск и возвращаем имя файла
     private String savePhoto(MultipartFile photoFile) throws IOException {
         String originalFilename = photoFile.getOriginalFilename();
         String filename = System.currentTimeMillis() + "_" +

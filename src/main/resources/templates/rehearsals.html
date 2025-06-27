@@ -36,38 +36,45 @@
     .btn i {
         margin-right: 5px;
     }
+    .table-custom {
+        background-color: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        border-collapse: separate;
+        border-spacing: 0;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+
+    .table-custom th {
+        background-color: rgba(30, 30, 30, 0.9);
+        color: #fff;
+        text-align: center;
+    }
+
+    .table-custom td {
+        background-color: rgba(0, 0, 0, 0.4);
+        color: #f8f9fa;
+        text-align: left;
+    }
+
+    .table-hover tbody tr:hover td {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .search-container {
+        margin-bottom: 20px;
+    }
+
+    .no-results {
+        text-align: center;
+        color: #fff;
+        font-style: italic;
+    }
   </style>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <div class="container">
-    <a class="navbar-brand" href="#" th:text="'Театр — ' + ${username}">Театр</a>
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
-            aria-controls="navbarNav" aria-expanded="false" aria-label="Переключатель навигации">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNav">
-      <ul class="navbar-nav me-auto">
-        <li class="nav-item">
-          <a class="nav-link" th:href="@{/workers}"><i class="fas fa-users"></i> Наши актёры</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" th:href="@{/requisites}"><i class="fas fa-mask"></i> Реквизит</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link active" th:href="@{/rehearsals}"><i class="fas fa-calendar-alt"></i> Репетиции</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" th:href="@{/performances/view}"><i class="fas fa-theater-masks"></i> Спектакли</a>
-        </li>
-      </ul>
-      <a class="btn btn-outline-danger" th:href="@{/logout}">
-        <i class="fas fa-sign-out-alt"></i> Выход
-      </a>
-    </div>
-  </div>
-</nav>
+<div th:replace="~{navbar.html}"></div>
 
 <div class="container my-5">
   <h1 class="text-center mb-4">Репетиции</h1>
@@ -87,10 +94,19 @@
     </a>
   </div>
 
+  <!-- Поиск -->
+  <div class="search-container">
+    <div class="input-group">
+      <span class="input-group-text"><i class="fas fa-search"></i></span>
+      <input type="text" id="searchInput" class="form-control" placeholder="Поиск по фамилии работника...">
+      <button class="btn btn-outline-secondary" type="button" id="clearSearch">Очистить</button>
+    </div>
+  </div>
+
   <!-- Таблица -->
   <div class="table-container">
     <div class="table-responsive">
-      <table class="table table-bordered table-hover">
+      <table class="table table-hover table-custom align-middle" id="rehearsalsTable">
         <thead class="table-light text-center">
         <tr>
           <th>Дата</th>
@@ -102,14 +118,14 @@
         </tr>
         </thead>
         <tbody>
-        <tr th:each="r : ${rehearsals}">
+        <tr th:each="r : ${rehearsals}" class="rehearsal-row">
           <td th:text="${r.date}">2025-06-02</td>
           <td th:text="${r.time}">18:30</td>
           <td th:text="${r.rehearsalRoom}">Зал 1</td>
-          <td>
-                            <span th:each="w, iter : ${r.workers}">
-                                <span th:text="${w.fio}">Имя Фамилия</span><span th:if="${!iter.last}">, </span>
-                            </span>
+          <td class="workers-cell">
+            <span th:each="w, iter : ${r.workers}">
+              <span th:text="${w.fio}">Имя Фамилия</span><span th:if="${!iter.last}">, </span>
+            </span>
           </td>
           <td th:text="${r.comment}">Комментарий</td>
           <td th:if="${canAdd}" class="text-center">
@@ -131,11 +147,51 @@
         </tr>
         </tbody>
       </table>
+      <div id="noResults" class="no-results" style="display: none;">Ничего не найдено</div>
     </div>
   </div>
 </div>
 
 <!-- Bootstrap Bundle JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('searchInput');
+    const clearSearch = document.getElementById('clearSearch');
+    const rehearsalRows = document.querySelectorAll('.rehearsal-row');
+    const noResults = document.getElementById('noResults');
+
+    function performSearch() {
+      const searchTerm = searchInput.value.trim().toLowerCase();
+      let hasResults = false;
+
+      rehearsalRows.forEach(row => {
+        const workersCell = row.querySelector('.workers-cell');
+        const workersText = workersCell.textContent.toLowerCase();
+
+        if (workersText.includes(searchTerm)) {
+          row.style.display = '';
+          hasResults = true;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      if (!hasResults && searchTerm.length > 0) {
+        noResults.style.display = 'block';
+      } else {
+        noResults.style.display = 'none';
+      }
+    }
+
+    searchInput.addEventListener('input', performSearch);
+
+    clearSearch.addEventListener('click', function() {
+      searchInput.value = '';
+      performSearch();
+    });
+  });
+</script>
 </body>
 </html>

@@ -5,58 +5,88 @@
     <title th:text="${requisite.requisiteId == null} ? 'Добавить реквизит' : 'Редактировать реквизит'">
         Форма реквизита
     </title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
+    <style>
+        body {
+            background-image: url('/uploads/photos/edit.png');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-card {
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .form-title {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        label {
+            font-weight: 600;
+        }
+
+        .btn-group {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+    </style>
 </head>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-<style>
-    body {
-    background-image: url('/uploads/photos/edit.png');
-    background-size: cover;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
-}
-</style>
 <body>
-<div class="container mt-5">
-    <h1 th:text="${requisite.requisiteId == null} ? 'Добавить реквизит' : 'Редактировать реквизит'">Форма</h1>
+<div class="form-card">
+    <h2 class="form-title" th:text="${requisite.requisiteId == null} ? 'Добавить реквизит' : 'Редактировать реквизит'">Форма</h2>
 
     <form th:action="${requisite.requisiteId == null} ? @{/requisites/save} : @{/requisites/update}"
           th:object="${requisite}" method="post">
-        <!-- Если редактируем, скрытое поле с ID -->
-        <input type="hidden" th:if="${requisite.requisiteId != null}"
-               th:field="*{requisiteId}" />
+
+        <!-- ID, если редактируем -->
+        <input type="hidden" th:if="${requisite.requisiteId != null}" th:field="*{requisiteId}" />
 
         <div class="mb-3">
-            <label class="form-label" for="title">Название</label>
+            <label for="title" class="form-label">Название</label>
             <input type="text" id="title" th:field="*{title}" class="form-control" required />
         </div>
 
         <div class="mb-3">
-            <label class="form-label" for="type">Тип</label>
+            <label for="type" class="form-label">Тип</label>
             <input type="text" id="type" th:field="*{type}" class="form-control" required />
         </div>
 
         <div class="mb-3">
-            <label class="form-label" for="totalQuantity">Общее количество</label>
-            <input type="number" id="totalQuantity" th:field="*{totalQuantity}"
-                   class="form-control" min="0" required />
+            <label for="totalQuantity" class="form-label">Общее количество</label>
+            <input type="number" id="totalQuantity" th:field="*{totalQuantity}" class="form-control" min="0" required />
         </div>
 
         <div class="mb-3">
-            <label class="form-label" for="availableQuantity">Доступное количество</label>
-            <input type="number" id="availableQuantity" th:field="*{availableQuantity}"
-                   class="form-control" min="0" required />
+            <label for="availableQuantity" class="form-label">Доступное количество</label>
+            <input type="number" id="availableQuantity" th:field="*{availableQuantity}" class="form-control" min="0" required />
         </div>
 
         <div class="mb-3">
-            <label class="form-label" for="size">Размер</label>
+            <label for="size" class="form-label">Размер</label>
             <input type="text" id="size" th:field="*{size}" class="form-control" />
         </div>
 
-        <button type="submit" class="btn btn-success">Сохранить</button>
-        <a href="/requisites" class="btn btn-secondary ms-2">Отмена</a>
+        <div class="btn-group">
+            <button type="submit" class="btn btn-success w-50 me-2">Сохранить</button>
+            <a href="/requisites" class="btn btn-secondary w-50">Отмена</a>
+        </div>
     </form>
 </div>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

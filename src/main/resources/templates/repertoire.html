@@ -2,196 +2,427 @@
 <html lang="ru" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8" />
-    <title>Repertoire</title>
+    <title>Репертуар</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+
     <style>
-        .requisite-group { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; }
-        .requisite-group > *:not(button) { flex: 1; }
+        body {
+     background-image: url('/uploads/photos/fonrep.jpg');
+     background-size: cover;
+     background-repeat: no-repeat;
+     background-attachment: fixed;
+     font-family: 'Montserrat', sans-serif;
+ }
+ .btn-add {
+  background-color: #fff !important; /* белый фон */
+  color: #000 !important;            /* чёрный текст */
+  border: 2px solid #000;            /* чёрная рамка */
+  border-radius: 6px;                /* скругление углов, можно убрать */
+  padding: 0.5rem 1rem;              /* отступы внутри */
+  font-weight: 600;                  /* чуть жирнее текст */
+  transition: background-color 0.3s, color 0.3s; /* плавный переход */
+}
+
+.btn-add:hover {
+  background-color: #000 !important; /* на ховере — чёрный фон */
+  color: #fff !important;             /* и белый текст */
+  border-color: #fff !important;     /* и белая рамка */
+  cursor: pointer;
+}
+.badge-date, .badge-time {
+font-weight: 700;
+color: #000 !important;
+background-color: rgba(78, 115, 223, 0.1);
+padding: 0.5em 0.75em;
+font-size: 1.1em; /* Увеличенный размер шрифта */
+border-radius: 8px;
+display: inline-block;
+min-width: 90px; /* Фиксированная ширина для выравнивания */
+text-align: center;
+}
+
+/* Дополнительные стили для таблицы */
+.table td {
+vertical-align: middle; /* Выравнивание по вертикали */
+}
+
+/* Увеличение шрифта в таблице */
+.table {
+font-size: 1.05em;
+}
+.btn-add {
+ background-color: #4e73df;
+ color: white;
+}
+
+.btn-add:hover {
+ background-color: #3a5ec0;
+ color: white;
+}
+
+.alert-custom {
+ border-radius: 8px;
+ box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-section {
+ margin-bottom: 2rem;
+ box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+ border-radius: 10px;
+ border: none;
+}
+
+.card {
+ border: none;
+ box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+ border-radius: 10px;
+ margin-bottom: 20px;
+}
+
+.card-header {
+ background-color: #f8f9fa;
+ border-bottom: 1px solid #e3e6f0;
+ font-weight: 600;
+ border-radius: 10px 10px 0 0 !important;
+ padding: 1rem 1.5rem;
+}
+
+.badge-date, .badge-time {
+ font-weight: 700;
+ color: #000 !important;
+ background-color: rgba(78, 115, 223, 0.1);
+ padding: 0.35em 0.65em;
+ font-size: 0.9em;
+}
+
+.requisite-group {
+ display: flex;
+ gap: 10px;
+ margin-bottom: 10px;
+ align-items: center;
+}
+
+.requisite-group select {
+ flex: 2;
+}
+
+.requisite-group input {
+ flex: 1;
+}
+
+.btn-remove-requisite {
+ width: 40px;
+ height: 40px;
+ display: flex;
+ align-items: center;
+ justify-content: center;
+ opacity: 0.8;
+}
+
+.btn-remove-requisite:hover {
+ opacity: 1;
+}
+
+.table th {
+ background-color: #f8f9fa;
+ font-weight: 600;
+}
+
+.table-hover tbody tr:hover {
+ background-color: rgba(78, 115, 223, 0.05);
+}
+
+.error-message {
+ color: #e74a3b;
+ font-size: 0.875em;
+ margin-top: 0.25rem;
+}
+
+.is-invalid {
+ border-color: #e74a3b;
+}
+
+.form-control-lg, .form-select-lg {
+ padding: 0.5rem 1rem;
+ font-size: 1rem;
+ border-radius: 8px;
+ border: 1px solid #d1d3e2;
+ opacity: 0.9;
+}
+
+.form-control-lg:focus, .form-select-lg:focus {
+ border-color: #bac8f3;
+ box-shadow: 0 0 0 0.25rem rgba(78, 115, 223, 0.25);
+ opacity: 1;
+}
+
+.btn {
+ opacity: 0.9;
+ transition: all 0.2s;
+}
+
+.btn:hover {
+ opacity: 1;
+ transform: translateY(-1px);
+}
     </style>
 </head>
 <body>
+<div th:replace="~{navbar.html}"></div>
+
 <div class="container mt-4">
-
-    <h1>Repertoire</h1>
-
-    <div th:if="${param.error}" class="alert alert-danger">
-        <span th:if="${param.error == 'accessDenied'}">Access denied!</span>
-        <span th:if="${param.error == 'deleteFailed'}">Error deleting repertoire!</span>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-calendar-alt me-2"></i>Репертуар</h1>
+        <button th:if="${isAdminOrDirector}" id="toggle-add-form" class="btn btn-add">
+            <i class="fas fa-plus me-1"></i>Добавить мероприятие
+        </button>
     </div>
-    <div th:if="${param.success}" class="alert alert-success">Operation completed successfully!</div>
+
+    <!-- Обработка ошибок -->
+    <div th:if="${param.error}" class="alert alert-danger alert-custom">
+        <span th:if="${param.error == 'accessDenied'}"><i class="fas fa-ban me-2"></i>Доступ запрещен!</span>
+        <span th:if="${param.error == 'deleteFailed'}"><i class="fas fa-exclamation-circle me-2"></i>Ошибка при удалении репертуара!</span>
+        <span th:if="${param.error == 'performanceRequired'}"><i class="fas fa-exclamation-circle me-2"></i>Необходимо выбрать спектакль!</span>
+        <span th:if="${param.error == 'dateRequired'}"><i class="fas fa-exclamation-circle me-2"></i>Необходимо указать дату!</span>
+        <span th:if="${param.error == 'timeRequired'}"><i class="fas fa-exclamation-circle me-2"></i>Необходимо указать время!</span>
+        <span th:if="${param.error == 'requisiteError'}"><i class="fas fa-exclamation-circle me-2"></i>Ошибка при выборе реквизитов!</span>
+        <span th:if="${param.error == 'workerError'}"><i class="fas fa-exclamation-circle me-2"></i>Ошибка при выборе сотрудников!</span>
+    </div>
+    <div th:if="${param.success}" class="alert alert-success alert-custom">
+        <i class="fas fa-check-circle me-2"></i>Операция выполнена успешно!
+    </div>
+    <div th:if="${error}" class="alert alert-danger alert-custom mt-3" th:text="${error}"></div>
 
     <!-- Edit form (shown only when editing) -->
-    <div th:if="${editingRepertoire != null and isAdminOrDirector}">
-        <h2>Edit</h2>
-        <form th:action="@{/repertoire/edit/{id}(id=${editingRepertoire.repertoireId})}" method="post" novalidate>
-            <div class="mb-3">
-                <label class="form-label">Performance</label>
-                <select name="performanceId" class="form-select" required>
-                    <option value="" disabled>Select performance</option>
-                    <option th:each="perf : ${performanceList}"
-                            th:value="${perf['performance_id']}"
-                            th:text="${perf['title']}"
-                            th:selected="${perf['performance_id'] == editingRepertoire.performanceId}"></option>
-                </select>
-            </div>
-            <div class="row g-2 mb-3">
-                <div class="col">
-                    <label class="form-label">Date</label>
-                    <input type="date" name="date" class="form-control"
-                           th:value="${#temporals.format(editingRepertoire.date, 'yyyy-MM-dd')}" required/>
-                </div>
-                <div class="col">
-                    <label class="form-label">Time</label>
-                    <input type="time" name="time" class="form-control"
-                           th:value="${#temporals.format(editingRepertoire.time, 'HH:mm')}" required/>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Workers</label>
-                <select name="workerIds" multiple size="5" class="form-select">
-                    <option th:each="w : ${workerList}"
-                            th:value="${w['worker_id']}"
-                            th:text="${w['fio']}"
-                            th:selected="${workerIds != null and workerIds.contains(w['worker_id'])}"></option>
-                </select>
-                <small class="text-muted">Ctrl/Cmd — multiple selection</small>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Requisites and quantity</label>
-                <div id="edit-requisites-container">
-                    <div th:each="req, stat : ${requisiteTransactions}" class="requisite-group">
-                        <select name="requisiteIds" class="form-select" required>
-                            <option value="" disabled>Select requisite</option>
-                            <option th:each="r : ${requisiteList}"
-                                    th:value="${r['requisite_id']}"
-                                    th:text="${r['title']} + ' (Available: ' + ${r['available_quantity']} + ')'"
-                                    th:selected="${r['requisite_id'] == req.requisiteId}"></option>
-                        </select>
-                        <input type="number" name="quantities" class="form-control"
-                               placeholder="Quantity" min="1" required
-                               th:attr="data-max=${r != null ? r.available_quantity : 0}"
-                               oninput="validateQuantity(this)"/>
-                        <button type="button" class="btn btn-danger btn-remove-requisite">×</button>
+    <div th:if="${editingRepertoire != null and isAdminOrDirector}" class="card">
+        <div class="card-header">
+            <i class="fas fa-edit me-2"></i>Редактирование мероприятия
+        </div>
+        <div class="card-body">
+            <form th:action="@{/repertoire/edit/{id}(id=${editingRepertoire.repertoireId})}" method="post" novalidate>
+                <div class="mb-3">
+                    <label class="form-label">Спектакль</label>
+                    <select name="performanceId" class="form-select form-select-lg" required>
+                        <option value="" disabled>Выберите спектакль</option>
+                        <option th:each="perf : ${performanceList}"
+                                th:value="${perf['performance_id']}"
+                                th:text="${perf['title']}"
+                                th:selected="${perf['performance_id'] == editingRepertoire.performanceId}"></option>
+                    </select>
+                    <div th:if="${fields != null && fields.hasFieldErrors('performanceId')}" class="error-message">
+                        <span th:each="error : ${fields.getFieldErrors('performanceId')}" th:text="${error.defaultMessage}"></span>
                     </div>
                 </div>
-                <button type="button" class="btn btn-secondary" id="add-edit-requisite-btn">
-                    Add requisite
-                </button>
-            </div>
-            <button type="submit" class="btn btn-primary me-2">Save</button>
-            <a th:href="@{/repertoire}" class="btn btn-secondary">Cancel</a>
-        </form>
-        <hr/>
+                <div class="row g-2 mb-3">
+                    <div class="col">
+                        <label class="form-label">Дата</label>
+                        <input type="date" name="date" class="form-control form-control-lg"
+                               th:value="${#temporals.format(editingRepertoire.date, 'yyyy-MM-dd')}" required/>
+                        <div th:if="${fields != null && fields.hasFieldErrors('date')}" class="error-message">
+                            <span th:each="error : ${fields.getFieldErrors('date')}" th:text="${error.defaultMessage}"></span>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <label class="form-label">Время</label>
+                        <input type="time" name="time" class="form-control form-control-lg"
+                               th:value="${#temporals.format(editingRepertoire.time, 'HH:mm')}" required/>
+                        <div th:if="${fields != null && fields.hasFieldErrors('time')}" class="error-message">
+                            <span th:each="error : ${fields.getFieldErrors('time')}" th:text="${error.defaultMessage}"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Сотрудники</label>
+                    <select name="workerIds" multiple size="5" class="form-select form-select-lg">
+                        <option th:each="w : ${workerList}"
+                                th:value="${w['worker_id']}"
+                                th:text="${w['fio']}"
+                                th:selected="${workerIds != null and workerIds.contains(w['worker_id'])}"></option>
+                    </select>
+                    <small class="text-muted">Зажмите Ctrl/Cmd для множественного выбора</small>
+                    <div th:if="${fields != null && fields.hasFieldErrors('workerIds')}" class="error-message">
+                        <span th:each="error : ${fields.getFieldErrors('workerIds')}" th:text="${error.defaultMessage}"></span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Реквизиты и количество</label>
+                    <div id="edit-requisites-container">
+                        <div th:each="req, stat : ${requisiteTransactions}" class="requisite-group">
+                            <select name="requisiteIds" class="form-select form-select-lg" required>
+                                <option value="" disabled>Выберите реквизит</option>
+                                <option th:each="r : ${requisiteList}"
+                                        th:value="${r['requisite_id']}"
+                                        th:text="${r['title']} + ' (Доступно: ' + ${r['available_quantity']} + ')'"
+                                        th:selected="${r['requisite_id'] == req.requisiteId}"
+                                        th:attr="data-max=${r['available_quantity']}"></option>
+                            </select>
+                            <input type="number" name="quantities" class="form-control form-control-lg"
+                                   placeholder="Количество" min="1" th:value="${req.quantity}"
+                                   th:attr="max=${r != null ? r.available_quantity : 1}"
+                                   oninput="validateQuantity(this)" required/>
+                            <button type="button" class="btn btn-danger btn-remove-requisite">×</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary mt-2" id="add-edit-requisite-btn">
+                        <i class="fas fa-plus me-1"></i>Добавить реквизит
+                    </button>
+                    <div th:if="${fields != null && fields.hasFieldErrors('requisiteIds')}" class="error-message">
+                        <span th:each="error : ${fields.getFieldErrors('requisiteIds')}" th:text="${error.defaultMessage}"></span>
+                    </div>
+                    <div th:if="${fields != null && fields.hasFieldErrors('quantities')}" class="error-message">
+                        <span th:each="error : ${fields.getFieldErrors('quantities')}" th:text="${error.defaultMessage}"></span>
+                    </div>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <a th:href="@{/repertoire}" class="btn btn-secondary">Отмена</a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Сохранить
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Add form -->
-    <div th:if="${isAdminOrDirector and editingRepertoire == null}">
-        <h2>Add</h2>
-        <form th:action="@{/repertoire/add}" method="post" novalidate>
-            <div class="mb-3">
-                <label class="form-label">Performance</label>
-                <select name="performanceId" class="form-select" required>
-                    <option value="" disabled selected>Select performance</option>
-                    <option th:each="perf : ${performanceList}"
-                            th:value="${perf['performance_id']}"
-                            th:text="${perf['title']}"></option>
-                </select>
-            </div>
-            <div class="row g-2 mb-3">
-                <div class="col">
-                    <label class="form-label">Date</label>
-                    <input type="date" name="date" class="form-control" required/>
+    <!-- Add form (hidden by default) -->
+    <div th:if="${isAdminOrDirector and editingRepertoire == null}" id="add-form" class="form-section card" style="display: none;">
+        <div class="card-header">
+            <i class="fas fa-plus-circle me-2"></i>Добавление нового мероприятия
+        </div>
+        <div class="card-body">
+            <form th:action="@{/repertoire/add}" method="post" novalidate>
+                <div class="mb-3">
+                    <label class="form-label">Спектакль</label>
+                    <select name="performanceId" class="form-select form-select-lg" required>
+                        <option value="" disabled selected>Выберите спектакль</option>
+                        <option th:each="perf : ${performanceList}"
+                                th:value="${perf['performance_id']}"
+                                th:text="${perf['title']}"></option>
+                    </select>
                 </div>
-                <div class="col">
-                    <label class="form-label">Time</label>
-                    <input type="time" name="time" class="form-control" required/>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Workers</label>
-                <select name="workerIds" multiple size="5" class="form-select">
-                    <option th:each="w : ${workerList}"
-                            th:value="${w['worker_id']}"
-                            th:text="${w['fio']}"></option>
-                </select>
-                <small class="text-muted">Ctrl/Cmd — multiple selection</small>
-            </div>
-            <div class="mb-3">
-                <label class="form-label">Requisites and quantity</label>
-                <div id="add-requisites-container">
-                    <div class="requisite-group">
-                        <select name="requisiteIds" class="form-select" required>
-                            <option value="" disabled selected>Select requisite</option>
-                            <option th:each="r : ${requisiteList}"
-                                    th:value="${r.requisite_id}"
-                                    th:text="${r.title} + ' (Available: ' + ${r.available_quantity} + ')'"
-                                    th:attr="data-max=${r.available_quantity}"></option>
-                        </select>
-                        <input type="number" name="quantities" class="form-control"
-                               placeholder="Quantity" min="1" required
-                               th:attr="max=${r != null ? r.available_quantity : 1}"
-                               oninput="validateQuantity(this)"/>
-                        <button type="button" class="btn btn-danger btn-remove-requisite">×</button>
+                <div class="row g-2 mb-3">
+                    <div class="col">
+                        <label class="form-label">Дата</label>
+                        <input type="date" name="date" class="form-control form-control-lg" required/>
+                    </div>
+                    <div class="col">
+                        <label class="form-label">Время</label>
+                        <input type="time" name="time" class="form-control form-control-lg" required/>
                     </div>
                 </div>
-                <button type="button" class="btn btn-secondary" id="add-requisite-btn">
-                    Add requisite
-                </button>
-            </div>
-            <button type="submit" class="btn btn-success">Save</button>
-        </form>
-        <hr/>
+                <div class="mb-3">
+                    <label class="form-label">Сотрудники</label>
+                    <select name="workerIds" multiple size="5" class="form-select form-select-lg">
+                        <option th:each="w : ${workerList}"
+                                th:value="${w['worker_id']}"
+                                th:text="${w['fio']}"></option>
+                    </select>
+                    <small class="text-muted">Зажмите Ctrl/Cmd для множественного выбора</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Реквизиты и количество</label>
+                    <div id="add-requisites-container">
+                        <div class="requisite-group">
+                            <select name="requisiteIds" class="form-select form-select-lg" required>
+                                <option value="" disabled selected>Выберите реквизит</option>
+                                <option th:each="r : ${requisiteList}"
+                                        th:value="${r.requisite_id}"
+                                        th:text="${r.title} + ' (Доступно: ' + ${r.available_quantity} + ')'"
+                                        th:attr="data-max=${r.available_quantity}"></option>
+                            </select>
+                            <input type="number" name="quantities" class="form-control form-control-lg"
+                                   placeholder="Количество" min="1" required
+                                   th:attr="max=${r != null ? r.available_quantity : 1}"
+                                   oninput="validateQuantity(this)"/>
+                            <button type="button" class="btn btn-danger btn-remove-requisite">×</button>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary mt-2" id="add-requisite-btn">
+                        <i class="fas fa-plus me-1"></i>Добавить реквизит
+                    </button>
+                </div>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" id="cancel-add" class="btn btn-secondary">Отмена</button>
+                    <button type="submit" class="btn btn-success">
+                        <i class="fas fa-check me-1"></i>Добавить
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 
     <!-- Repertoire table -->
-    <h2>Repertoire list</h2>
-    <table class="table table-striped align-middle">
-        <thead>
-        <tr>
-            <th>Date</th>
-            <th>Time</th>
-            <th>Performance</th>
-            <th>Workers</th>
-            <th>Requisites (quantity)</th>
-            <th>Actions</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="item : ${repertoireList}">
-            <td th:text="${#temporals.format(item.date,'dd.MM.yyyy')}"></td>
-            <td th:text="${#temporals.format(item.time,'HH:mm')}"></td>
-            <td th:text="${item.performanceTitle}"></td>
-            <td>
-                <ul class="list-unstyled mb-0">
-                    <li th:each="name : ${item.workerNames}"
-                        th:text="${name}"></li>
-                </ul>
-            </td>
-            <td>
-                <ul class="list-unstyled mb-0">
-                    <li th:each="req : ${item.requisites}"
-                        th:text="${req.title} + ' (' + ${req.quantity} + ')'"></li>
-                </ul>
-            </td>
-            <td>
-                <div th:if="${isAdminOrDirector}">
-                    <a th:href="@{/repertoire/edit/{id}(id=${item.repertoireId})}"
-                       class="btn btn-sm btn-warning me-2">Edit</a>
-                    <form th:action="@{/repertoire/delete/{id}(id=${item.repertoireId})}"
-                          method="post" style="display:inline;"
-                          onsubmit="return confirm('Delete?');">
-                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-                    </form>
-                </div>
-            </td>
-        </tr>
-        </tbody>
-    </table>
-    <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-list me-2"></i>Список мероприятий
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Время</th>
+                        <th>Спектакль</th>
+                        <th>Сотрудники</th>
+                        <th>Реквизиты (количество)</th>
+                        <th>Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="item : ${repertoireList}">
+                        <td><span class="badge badge-date" th:text="${#temporals.format(item.date,'dd.MM.yyyy')}"></span></td>
+                        <td><span class="badge badge-time" th:text="${#temporals.format(item.time,'HH:mm')}"></span></td>
+                        <td th:text="${item.performanceTitle}"></td>
+                        <td>
+                            <ul class="list-unstyled mb-0">
+                                <li th:each="name : ${item.workerNames}"
+                                    th:text="${name}"></li>
+                            </ul>
+                        </td>
+                        <td>
+                            <ul class="list-unstyled mb-0">
+                                <li th:each="req : ${item.requisites}"
+                                    th:text="${req.title} + ' (' + ${req.quantity} + ')'"></li>
+                            </ul>
+                        </td>
+                        <td>
+                            <div th:if="${isAdminOrDirector}" class="d-flex gap-2">
+                                <a th:href="@{/repertoire/edit/{id}(id=${item.repertoireId})}"
+                                   class="btn btn-sm btn-warning">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <form th:action="@{/repertoire/delete/{id}(id=${item.repertoireId})}"
+                                      method="post" style="display:inline;"
+                                      onsubmit="return confirm('Удалить это мероприятие?');">
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
 <script>
+    // Toggle add form visibility
+    document.getElementById('toggle-add-form')?.addEventListener('click', () => {
+        const form = document.getElementById('add-form');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.getElementById('cancel-add')?.addEventListener('click', () => {
+        document.getElementById('add-form').style.display = 'none';
+    });
+
     // Add/remove requisite blocks for add form
     document.getElementById('add-requisite-btn')?.addEventListener('click', () => {
         const container = document.getElementById('add-requisites-container');
@@ -221,18 +452,18 @@
     });
 
     // Validate quantity input
- function validateQuantity(input) {
-    const select = input.closest('.requisite-group').querySelector('select');
-    const selectedOption = select.options[select.selectedIndex];
-    if (selectedOption && selectedOption.value) {
-        const max = selectedOption.getAttribute('data-max') ||
-                    (selectedOption.text.match(/Available: (\d+)/) ? selectedOption.text.match(/Available: (\d+)/)[1] : 1);
-        if (max && input.value > parseInt(max)) {
-            input.value = max;
-            alert(`Cannot exceed available quantity of ${max}`);
+    function validateQuantity(input) {
+        const select = input.closest('.requisite-group').querySelector('select');
+        const selectedOption = select.options[select.selectedIndex];
+        if (selectedOption && selectedOption.value) {
+            const max = selectedOption.getAttribute('data-max') ||
+                       (selectedOption.text.match(/Доступно: (\d+)/) ? selectedOption.text.match(/Доступно: (\d+)/)[1] : 1);
+            if (max && input.value > parseInt(max)) {
+                input.value = max;
+                alert(`Нельзя превысить доступное количество ${max}`);
+            }
         }
     }
-}
 
     // Add event listeners for select changes
     document.addEventListener('change', e => {
@@ -240,6 +471,14 @@
             const input = e.target.closest('.requisite-group').querySelector('input[type="number"]');
             validateQuantity(input);
         }
+    });
+
+    // Highlight invalid fields
+    document.addEventListener('DOMContentLoaded', () => {
+        const errorFields = document.querySelectorAll('.is-invalid');
+        errorFields.forEach(field => {
+            field.classList.add('is-invalid');
+        });
     });
 </script>
 </body>

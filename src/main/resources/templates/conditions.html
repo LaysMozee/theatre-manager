@@ -4,20 +4,260 @@
     <meta charset="UTF-8">
     <title>Управление состоянием реквизита</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
-        .condition-used {
-            background-color: #fff3cd;
+
+        :root {
+            --primary-color: #28a745; /* Зеленый цвет */
+            --secondary-color: #f8f9fa;
+            --accent-color: #218838;
+            --text-color: #343a40;
         }
+
+        body {
+         background-image: url('/uploads/photos/fonsos.jpg');
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+            background-color: #f8f9fa;
+            color: var(--text-color);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container {
+            max-width: 1200px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+            padding: 30px;
+            margin-top: 30px;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .card {
+            border: none;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 25px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .card-header {
+            background-color: white;
+            color: var(--primary-color);
+            font-weight: 600;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            padding: 15px 20px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .btn-primary:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+        }
+
+        .btn-add {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-add:hover {
+            background-color: var(--accent-color);
+            border-color: var(--accent-color);
+            color: white;
+        }
+
+        .table {
+            margin-top: 10px;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        .table th {
+            background-color: var(--secondary-color);
+            color: var(--primary-color);
+            font-weight: 600;
+            border-top: 1px solid #e3e6f0;
+        }
+
+        .table td, .table th {
+            padding: 12px 15px;
+            vertical-align: middle;
+            border-bottom: 1px solid #e3e6f0;
+        }
+
+        .table tr:hover td {
+            background-color: rgba(40, 167, 69, 0.05);
+        }
+
+        .condition-used {
+            background-color: #e7f5ee;
+            border-left: 4px solid #28a745;
+        }
+
         .condition-damaged {
-            background-color: #f8d7da;
+            background-color: #fce8e8;
+            border-left: 4px solid #dc3545;
+        }
+
+        .form-section {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .badge-date {
+            background-color: #6c757d;
+            color: white;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .badge-time {
+            background-color: #17a2b8;
+            color: white;
+            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+
+        .alert-custom {
+            border-left: 5px solid var(--primary-color);
+        }
+
+        .form-control-lg {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+        }
+
+        .form-select-lg {
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+        }
+
+        /* Navbar styles */
+        .navbar-custom {
+            background-color: #6c757d;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+
+        .navbar-custom .navbar-brand,
+        .navbar-custom .nav-link {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .navbar-custom .nav-link:hover {
+            color: rgba(255, 255, 255, 1);
+        }
+
+        .navbar-custom .dropdown-menu {
+            border: none;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+
+        .navbar-custom .dropdown-item {
+            color: #5a5c69;
+        }
+
+        .navbar-custom .dropdown-item:hover {
+            background-color: #f8f9fc;
+        }
+
+        .user-icon {
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 </head>
 <body>
-<div class="container mt-4">
-    <h1>Управление состоянием реквизита</h1>
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#">
+            <i class="fas fa-theater-masks me-2"></i>Театр - это жизнь
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/performances/view}">
+                        <i class="fas fa-scroll me-1"></i>Спектакли
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/repertoire}">
+                        <i class="fas fa-calendar-alt me-1"></i>Репертуар
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active" th:href="@{/conditions}">
+                        <i class="fas fa-clipboard-check me-1"></i>Состояние реквизита
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/requisites}">
+                        <i class="fas fa-tshirt me-1"></i>Реквизит
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/workers}">
+                        <i class="fas fa-users me-1"></i>Сотрудники
+                    </a>
+                </li>
+            </ul>
+            <div class="d-flex align-items-center">
+                <div class="dropdown">
+                    <a class="d-flex align-items-center text-decoration-none dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
+                        <div class="user-icon me-2">
+                            <i class="fas fa-user text-white"></i>
+                        </div>
+                        <span class="text-white me-2" th:text="${userName}"></span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="#"><i class="fas fa-user-cog me-2"></i>Профиль</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post">
+                                <button type="submit" class="dropdown-item">
+                                    <i class="fas fa-sign-out-alt me-2"></i>Выйти
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</nav>
 
-    <div th:if="${param.error}" class="alert alert-danger">
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1><i class="fas fa-clipboard-check me-2"></i>Управление состоянием реквизита</h1>
+        <button th:if="${isAdminOrDecorator}" id="toggle-add-form" class="btn btn-add">
+            <i class="fas fa-plus me-1"></i>Добавить состояние
+        </button>
+    </div>
+
+    <div th:if="${param.error}" class="alert alert-danger alert-custom">
+        <i class="fas fa-exclamation-circle me-2"></i>
         <span th:switch="${param.error}">
             <span th:case="'access_denied'">Доступ запрещен!</span>
             <span th:case="'save_failed'">Ошибка сохранения!</span>
@@ -27,15 +267,20 @@
             <span th:case="'cannot_delete_used'">Нельзя удалить запись о задействованном реквизите!</span>
         </span>
     </div>
-    <div th:if="${param.success}" class="alert alert-success">Операция выполнена успешно!</div>
+    <div th:if="${param.success}" class="alert alert-success alert-custom">
+        <i class="fas fa-check-circle me-2"></i>Операция выполнена успешно!
+    </div>
 
-    <div th:if="${isAdminOrDecorator}" class="card mb-4">
-        <div class="card-header">Добавить состояние реквизита</div>
+    <!-- Add form (hidden by default) -->
+    <div th:if="${isAdminOrDecorator}" id="add-form" class="form-section card">
+        <div class="card-header">
+            <i class="fas fa-plus-circle me-2"></i>Добавление состояния реквизита
+        </div>
         <div class="card-body">
             <form th:action="@{/condition/save}" method="post">
                 <div class="mb-3">
                     <label class="form-label">Реквизит</label>
-                    <select name="requisiteId" class="form-select" required>
+                    <select name="requisiteId" class="form-select form-select-lg" required>
                         <option value="">Выберите реквизит</option>
                         <option th:each="req : ${requisites}"
                                 th:value="${req.requisite_id}"
@@ -44,7 +289,7 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Тип состояния</label>
-                    <select name="conditionTypeId" class="form-select" required>
+                    <select name="conditionTypeId" class="form-select form-select-lg" required>
                         <option value="">Выберите тип</option>
                         <option th:each="type : ${conditionTypes}"
                                 th:value="${type.conditionTypeId}"
@@ -53,85 +298,116 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Количество</label>
-                    <input type="number" name="quantity" class="form-control" min="1" required>
+                    <input type="number" name="quantity" class="form-control form-control-lg" min="1" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Комментарий</label>
-                    <textarea name="comment" class="form-control" placeholder="Опишите состояние реквизита..."></textarea>
+                    <textarea name="comment" class="form-control form-control-lg" rows="3" placeholder="Опишите состояние реквизита..."></textarea>
                 </div>
-                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <div class="d-flex justify-content-end gap-2">
+                    <button type="button" id="cancel-add" class="btn btn-secondary">Отмена</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-1"></i>Сохранить
+                    </button>
+                </div>
             </form>
         </div>
     </div>
 
-    <div class="card mb-4">
-        <div class="card-header">Реквизит, используемый в репертуаре</div>
+    <div class="card">
+        <div class="card-header">
+            <i class="fas fa-calendar-alt me-2"></i>Реквизит, используемый в репертуаре
+        </div>
         <div class="card-body">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>Реквизит</th>
-                    <th>Спектакль</th>
-                    <th>Дата</th>
-                    <th>Время</th>
-                    <th>Количество</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="used : ${usedRequisites}">
-                    <td th:text="${used.requisiteTitle}"></td>
-                    <td th:text="${used.performanceTitle}"></td>
-                    <td th:text="${#temporals.format(used.date, 'dd.MM.yyyy')}"></td>
-                    <td th:text="${#temporals.format(used.time, 'HH:mm')}"></td>
-                    <td th:text="${used.quantity}"></td>
-                </tr>
-                <tr th:if="${usedRequisites.isEmpty()}">
-                    <td colspan="5" class="text-center">Нет данных</td>
-                </tr>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>Реквизит</th>
+                        <th>Спектакль</th>
+                        <th>Дата</th>
+                        <th>Время</th>
+                        <th>Количество</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="used : ${usedRequisites}" class="condition-used">
+                        <td th:text="${used.requisiteTitle}"></td>
+                        <td th:text="${used.performanceTitle}"></td>
+                        <td><span class="badge badge-date" th:text="${#temporals.format(used.date, 'dd.MM.yyyy')}"></span></td>
+                        <td><span class="badge badge-time" th:text="${#temporals.format(used.time, 'HH:mm')}"></span></td>
+                        <td th:text="${used.quantity}"></td>
+                    </tr>
+                    <tr th:if="${usedRequisites.isEmpty()}">
+                        <td colspan="5" class="text-center text-muted">Нет данных</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 
     <div class="card">
-        <div class="card-header">История изменений состояний</div>
+        <div class="card-header">
+            <i class="fas fa-history me-2"></i>История изменений состояний
+        </div>
         <div class="card-body">
-            <table class="table">
-                <thead>
-                <tr>
-                    <th>Дата</th>
-                    <th>Реквизит</th>
-                    <th>Тип</th>
-                    <th>Количество</th>
-                    <th>Комментарий</th>
-                    <th th:if="${isAdmin}">Действия</th>
-                </tr>
-                </thead>
-                <tbody>
-                <tr th:each="cond : ${conditions}"
-                    th:class="${(cond.conditionTypeId == 7) ? 'condition-used' : ((cond.conditionTypeId != 1 and cond.conditionTypeId != 5) ? 'condition-damaged' : '')}">
-                    <td th:text="${#temporals.format(cond.date, 'dd.MM.yyyy')}"></td>
-                    <td th:text="${cond.requisiteTitle}"></td>
-                    <td th:text="${cond.conditionTypeName}"></td>
-                    <td th:text="${cond.quantity}"></td>
-                    <td th:text="${cond.comment}"></td>
-                    <td th:if="${isAdmin}">
-                        <a th:href="@{'/condition/delete/' + ${cond.conditionId}}"
-                           class="btn btn-sm btn-danger"
-                           th:if="${cond.conditionTypeId != 7}"
-                           onclick="return confirm('Удалить запись? Это вернет количество реквизита в доступные. Продолжить?')">
-                            Удалить
-                        </a>
-                        <span th:if="${cond.conditionTypeId == 7}" class="text-muted">Используется</span>
-                    </td>
-                </tr>
-                <tr th:if="${conditions.isEmpty()}">
-                    <td colspan="6" class="text-center">Нет данных</td>
-                </tr>
-                </tbody>
-            </table>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Реквизит</th>
+                        <th>Тип</th>
+                        <th>Количество</th>
+                        <th>Комментарий</th>
+                        <th th:if="${isAdmin}">Действия</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="cond : ${conditions}"
+                        th:class="${(cond.conditionTypeId == 7) ? 'condition-used' : ((cond.conditionTypeId != 1 and cond.conditionTypeId != 5) ? 'condition-damaged' : '')}">
+                        <td th:text="${#temporals.format(cond.date, 'dd.MM.yyyy')}"></td>
+                        <td th:text="${cond.requisiteTitle}"></td>
+                        <td>
+                            <span th:if="${cond.conditionTypeId == 7}" class="badge bg-success" th:text="${cond.conditionTypeName}"></span>
+                            <span th:if="${cond.conditionTypeId != 7 and cond.conditionTypeId != 1 and cond.conditionTypeId != 5}" class="badge bg-danger" th:text="${cond.conditionTypeName}"></span>
+                            <span th:if="${cond.conditionTypeId == 1 or cond.conditionTypeId == 5}" class="badge bg-secondary" th:text="${cond.conditionTypeName}"></span>
+                        </td>
+                        <td th:text="${cond.quantity}"></td>
+                        <td th:text="${cond.comment} ?: '-'"></td>
+                        <td th:if="${isAdmin}">
+                            <a th:href="@{'/condition/delete/' + ${cond.conditionId}}"
+                               class="btn btn-sm btn-danger"
+                               th:if="${cond.conditionTypeId != 7}"
+                               onclick="return confirm('Удалить запись? Это вернет количество реквизита в доступные. Продолжить?')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            <span th:if="${cond.conditionTypeId == 7}" class="text-muted">Используется</span>
+                        </td>
+                    </tr>
+                    <tr th:if="${conditions.isEmpty()}">
+                        <td colspan="6" class="text-center text-muted">Нет данных</td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+<script>
+    // Toggle add form visibility
+    document.getElementById('toggle-add-form')?.addEventListener('click', () => {
+        const form = document.getElementById('add-form');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    });
+
+    document.getElementById('cancel-add')?.addEventListener('click', () => {
+        document.getElementById('add-form').style.display = 'none';
+    });
+</script>
 </body>
 </html>

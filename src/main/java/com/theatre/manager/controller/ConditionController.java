@@ -30,7 +30,7 @@ public class ConditionController {
 
     @GetMapping("/conditions")
     public String showConditions(Model model, HttpSession session) {
-        if (!hasAccess(session, WorkerRole.ADMIN, WorkerRole.DECORATOR)) {
+        if (!hasAccess(session, WorkerRole.ADMIN,WorkerRole.DIRECTOR, WorkerRole.DECORATOR, WorkerRole.ACTOR)) {
             return "redirect:/login?error=access_denied";
         }
 
@@ -44,7 +44,7 @@ public class ConditionController {
                             "FROM conditions c " +
                             "JOIN requisite r ON c.requisite_id = r.requisite_id " +
                             "JOIN condition_type ct ON c.condition_type_id = ct.condition_type_id " +
-                            "WHERE c.condition_type_id != 7 " +  // Add this condition
+                            "WHERE c.condition_type_id != 7 " +  // если задействован
                             "ORDER BY c.date DESC",
                     (rs, rowNum) -> {
                         Condition condition = new Condition();

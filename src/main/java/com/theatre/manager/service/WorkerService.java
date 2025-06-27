@@ -13,9 +13,6 @@ public class WorkerService {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    /**
-     * Возвращает список WorkerDto тех сотрудников, у которых поле post = переданное значение.
-     */
     public List<WorkerDto> getWorkersByPostDto(String post) {
         String sql = "SELECT worker_id, fio FROM worker WHERE post = ? ORDER BY fio";
         return jdbcTemplate.query(

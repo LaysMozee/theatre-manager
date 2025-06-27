@@ -3,114 +3,212 @@
 <head>
     <meta charset="UTF-8" />
     <title>Вход в систему</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
     <style>
+        body {
+            background-image: url('/uploads/photos/fonlogin.jpg');
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-position: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #fff;
+            position: relative;
+        }
 
-body {
-    background-image: url('/uploads/photos/5ecf5366d34a5e70b91740ba1b015f8e.jpg');
-background-size: cover;
-background-repeat: no-repeat;
-background-attachment: fixed;
-  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  background: #f0f2f5;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-  color: #333;
-}
-form {
-  background: white;
-  padding: 30px 35px;
-  border-radius: 8px;
-  box-shadow: 0 6px 15px rgb(0 0 0 / 0.1);
-  width: 100%;
-  max-width: 350px;
-  box-sizing: border-box;
-  text-align: center;
-}
-.input-wrapper {
-  position: relative;
-  margin: 12px 0;
-  width: 100%;
-}
-input[type="text"],
-input[type="password"] {
-  width: 100%;
-  padding: 10px 14px 10px 40px; /* отступ слева для иконки */
-  font-size: 15px;
-  border: 1.8px solid #ccc;
-  border-radius: 5px;
-  transition: border-color 0.3s;
-  box-sizing: border-box;
-}
-input[type="text"]:focus,
-input[type="password"]:focus {
-  outline: none;
-  border-color: #3a86ff;
-  box-shadow: 0 0 6px #3a86ffaa;
-}
-.input-wrapper svg {
-  position: absolute;
-  left: 12px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 18px;
-  height: 18px;
-  fill: #888;
-  pointer-events: none;
-  transition: fill 0.3s;
-}
-input[type="text"]:focus + svg,
-input[type="password"]:focus + svg {
-  fill: #3a86ff;
-}
-button {
-  width: 100%;
-  padding: 12px;
-  background-color: #3a86ff;
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-weight: 700;
-  font-size: 16px;
-  cursor: pointer;
-  margin-top: 15px;
-  transition: background-color 0.25s ease;
-}
-button:hover {
-  background-color: #265ddb;
-}
-p.error-message {
-  color: #d93025;
-  margin-top: 15px;
-  font-weight: 600;
-  font-size: 14px;
-}
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 0;
+        }
+
+        .login-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 500px;
+            padding: 0 20px;
+            text-align: center;
+        }
+
+        .login-header {
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .login-header h1 {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .login-header h1 span.brand {
+            font-weight: 700;
+            color: #ffc107;
+            display: block;
+            font-size: 3rem;
+            margin-top: 10px;
+        }
+
+        .login-form {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .form-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px 15px 15px 45px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s;
+            color: #333;
+        }
+
+        .form-control:focus {
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.3);
+            outline: none;
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-size: 18px;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            border: none;
+            border-radius: 8px;
+            color: #000;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+            box-shadow: 0 4px 15px rgba(255, 193, 7, 0.3);
+        }
+
+        .btn-login:hover {
+            background: linear-gradient(135deg, #ff9800, #ffc107);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 193, 7, 0.4);
+        }
+
+        .error-message {
+            color: #ff5252;
+            margin-top: 20px;
+            font-weight: 500;
+            font-size: 14px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            animation: shake 0.5s ease;
+        }
+
+        .footer-text {
+            margin-top: 30px;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+
+        @media (max-width: 576px) {
+            .login-header h1 {
+                font-size: 2rem;
+            }
+            .login-header h1 span.brand {
+                font-size: 2.2rem;
+            }
+            .login-form {
+                padding: 30px 20px;
+            }
+        }
     </style>
 </head>
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
 
 <body>
-<h1>
-    <span>Авторизация в театральной системе: </span>
-    <span style="font-weight: bold;">"Счастливый случай"</span>
-</h1>
-<form action="/login" method="post" xmlns:th="http://www.w3.org/1999/xhtml">
-    <div class="input-wrapper">
-        <input type="text" name="login" placeholder="Логин" required autocomplete="username" />
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 12c2.21 0 4-1.79 4-4S14.21 4 12 4 8 5.79 8 8s1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-        </svg>
+<div class="login-container">
+    <div class="login-header">
+        <h1>Авторизация в системе<br><span class="brand">"Счастливый случай"</span></h1>
     </div>
-    <div class="input-wrapper">
-        <input type="password" name="password" placeholder="Пароль" required autocomplete="current-password" />
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M12 17a2 2 0 100-4 2 2 0 000 4zm6-8h-1V6a5 5 0 00-10 0v3H6a2 2 0 00-2 2v7a2 2 0 002 2h12a2 2 0 002-2v-7a2 2 0 00-2-2zm-6-3a3 3 0 013 3v3H9V9a3 3 0 013-3z"/>
-        </svg>
+
+    <form class="login-form" action="/login" method="post" xmlns:th="http://www.w3.org/1999/xhtml">
+        <div class="form-group">
+            <i class="fas fa-user input-icon"></i>
+            <input type="text" class="form-control" name="login" placeholder="Логин" required autocomplete="username">
+        </div>
+
+        <div class="form-group">
+            <i class="fas fa-lock input-icon"></i>
+            <input type="password" class="form-control" name="password" placeholder="Пароль" required autocomplete="current-password">
+        </div>
+
+        <button type="submit" class="btn btn-login">Войти в систему</button>
+
+        <p class="error-message" th:if="${error}" th:text="${error}"></p>
+    </form>
+
+    <div class="footer-text">
+        Театральная система управления реквизитом и постановками
     </div>
-    <button type="submit">Войти</button>
-    <p class="error-message" th:if="${error}" th:text="${error}"></p>
-</form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

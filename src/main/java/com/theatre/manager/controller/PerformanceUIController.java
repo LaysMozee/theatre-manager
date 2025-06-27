@@ -19,7 +19,7 @@ public class PerformanceUIController {
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    // Страница со списком спектаклей
+    // Страница со списком спектаклей (доступна всем)
     @GetMapping("/performances/view")
     public String showPerformancesPage(Model model, HttpSession session) {
         // Получаем жанры
@@ -44,34 +44,36 @@ public class PerformanceUIController {
 
         model.addAttribute("genres", genres);
         model.addAttribute("performances", performances);
-
-        String roleStr = (String) session.getAttribute("workerRole");
-        boolean canAdd = "admin".equals(roleStr) || "director".equals(roleStr);
-        model.addAttribute("canAdd", canAdd);
-        model.addAttribute("userRole", roleStr);
-
+        model.addAttribute("canAdd", isAdminOrDirector(session));
         return "performances";
     }
 
-    // Форма добавления спектакля
+    // Форма добавления спектакля (только для админов и директоров)
     @GetMapping("/performances/add")
-    public String showAddPerformanceForm(Model model) {
-        model.addAttribute("performance", new PerformanceDto());
+    public String showAddPerformanceForm(Model model, HttpSession session) {
+        if (!isAdminOrDirector(session)) {
+            return "redirect:/performances/view?error=accessDenied";
+        }
 
-        List<GenreDto> genres = jdbcTemplate.query(
+        model.addAttribute("genres", jdbcTemplate.query(
                 "SELECT genre_id, genre_name FROM genre",
                 (rs, rowNum) -> new GenreDto(rs.getLong("genre_id"), rs.getString("genre_name"))
-        );
-
-        model.addAttribute("genres", genres);
+        ));
 
         return "performance-form";
     }
 
     @PostMapping("/performances/create")
     @ResponseBody
-    public Map<String, Object> createPerformanceJson(@RequestBody PerformanceDto dto) {
+    public Map<String, Object> createPerformanceJson(@RequestBody PerformanceDto dto, HttpSession session) {
         Map<String, Object> response = new HashMap<>();
+
+        if (!isAdminOrDirector(session)) {
+            response.put("status", "error");
+            response.put("message", "Доступ запрещен");
+            return response;
+        }
+
         try {
             jdbcTemplate.update(
                     "INSERT INTO performance (title, description, duration, genre_id) VALUES (?, ?, ?, ?)",
@@ -90,11 +92,13 @@ public class PerformanceUIController {
     }
 
     @GetMapping("/performances/edit/{id}")
-    public String editPerformanceForm(@PathVariable("id") Long id, Model model) {
-        // Тут нужно получить спектакль по id из базы
-        String sql = "SELECT performance_id, title, description, duration, genre_id FROM performance WHERE performance_id = ?";
+    public String editPerformanceForm(@PathVariable("id") Long id, Model model, HttpSession session) {
+        if (!isAdminOrDirector(session)) {
+            return "redirect:/performances/view?error=accessDenied";
+        }
+
         PerformanceDto performance = jdbcTemplate.queryForObject(
-                sql,
+                "SELECT performance_id, title, description, duration, genre_id FROM performance WHERE performance_id = ?",
                 new Object[]{id},
                 (rs, rowNum) -> new PerformanceDto(
                         rs.getLong("performance_id"),
@@ -106,15 +110,59 @@ public class PerformanceUIController {
         );
         model.addAttribute("performance", performance);
 
-        // Подгрузим жанры для селекта, чтобы можно было менять жанр
         List<GenreDto> genres = jdbcTemplate.query(
                 "SELECT genre_id, genre_name FROM genre",
                 (rs, rowNum) -> new GenreDto(rs.getLong("genre_id"), rs.getString("genre_name"))
         );
         model.addAttribute("genres", genres);
 
-        return "performance-edit-form"; // Имя Thymeleaf шаблона с формой редактирования
+        return "performance-edit-form";
     }
+
+    @PostMapping("/performances/update")
+    public String updatePerformance(@ModelAttribute("performance") PerformanceDto performance, HttpSession session) {
+        if (!isAdminOrDirector(session)) {
+            return "redirect:/performances/view?error=accessDenied";
+        }
+
+        int rows = jdbcTemplate.update(
+                "UPDATE performance SET title = ?, description = ?, duration = ?, genre_id = ? WHERE performance_id = ?",
+                performance.getTitle(),
+                performance.getDescription(),
+                performance.getDuration(),
+                performance.getGenreId(),
+                performance.getPerformanceId()
+        );
+
+        return "redirect:/performances/view";
+    }
+
+    @DeleteMapping("/performances/delete/{id}")
+    @ResponseBody
+    public Map<String, String> deletePerformance(@PathVariable Long id, HttpSession session) {
+        Map<String, String> response = new HashMap<>();
+
+        if (!isAdminOrDirector(session)) {
+            response.put("status", "error");
+            response.put("message", "Доступ запрещен");
+            return response;
+        }
+
+        try {
+            jdbcTemplate.update("DELETE FROM performance WHERE performance_id = ?", id);
+            response.put("status", "success");
+        } catch (Exception e) {
+            response.put("status", "error");
+            response.put("message", e.getMessage());
+        }
+        return response;
+    }
+
+    private boolean isAdminOrDirector(HttpSession session) {
+        String role = (String) session.getAttribute("workerRole");
+        return "admin".equals(role) || "director".equals(role);
+    }
+
     // Вспомогательные классы DTO для отображения
     public static class PerformanceView {
         public Long performanceId;
@@ -143,40 +191,4 @@ public class PerformanceUIController {
             this.genreName = genreName;
         }
     }
-    @PostMapping("/performances/update")
-    public String updatePerformance(@ModelAttribute("performance") PerformanceDto performance) {
-        String sql = "UPDATE performance SET title = ?, description = ?, duration = ?, genre_id = ? WHERE performance_id = ?";
-
-        int rows = jdbcTemplate.update(sql,
-                performance.getTitle(),
-                performance.getDescription(),
-                performance.getDuration(),
-                performance.getGenreId(),
-                performance.getPerformanceId()
-        );
-
-        if (rows == 0) {
-            // Если обновление не прошло — можно логировать или возвращать ошибку
-            // Например, вернуть на форму с сообщением об ошибке
-            return "performance-edit-form";
-        }
-
-        return "redirect:/performances/view";
-    }
-
-    @DeleteMapping("/performances/delete/{id}")
-    @ResponseBody
-    public Map<String, String> deletePerformance(@PathVariable Long id) {
-        Map<String, String> response = new HashMap<>();
-        try {
-            jdbcTemplate.update("DELETE FROM performance WHERE performance_id = ?", id);
-            response.put("status", "success");
-        } catch (Exception e) {
-            response.put("status", "error");
-            response.put("message", e.getMessage());
-        }
-        return response;
-    }
-
-
 }

@@ -27,9 +27,6 @@ public class RepertoireController {
 
     @GetMapping
     public String showRepertoirePage(Model model, HttpSession session) {
-        if (!isAdminOrDirector(session)) {
-            return "redirect:/login?error=access_denied";
-        }
 
         List<RepertoireDto> repertoireList = jdbcTemplate.query(
                 "SELECT r.repertoire_id, r.performance_id, r.date, r.time, p.title AS performance_title " +
@@ -142,7 +139,7 @@ public class RepertoireController {
         }
 
         try {
-            // First return all requisites quantities
+            // вывод старого рек
             List<Map<String, Object>> oldRequisites = jdbcTemplate.queryForList(
                     "SELECT requisite_id, quantity FROM repertoire_requisite WHERE repertoire_id = ?", id);
 
@@ -152,12 +149,12 @@ public class RepertoireController {
                         req.get("quantity"), req.get("requisite_id"));
             }
 
-            // Update main repertoire info
+            //
             jdbcTemplate.update(
                     "UPDATE repertoire SET performance_id = ?, date = ?, time = ? WHERE repertoire_id = ?",
                     performanceId, Date.valueOf(LocalDate.parse(date)), Time.valueOf(LocalTime.parse(time)), id);
 
-            // Delete old workers and add new ones
+            // удалить старый сотрудников и добавить новых
             jdbcTemplate.update("DELETE FROM repertoire_worker WHERE repertoire_id = ?", id);
             if (workerIds != null) {
                 for (Long workerId : workerIds) {
@@ -167,7 +164,7 @@ public class RepertoireController {
                 }
             }
 
-            // Delete old requisites and add new ones
+            // удалить старый реквез и добавить новых
             jdbcTemplate.update("DELETE FROM repertoire_requisite WHERE repertoire_id = ?", id);
             if (requisiteIds != null && quantities != null) {
                 for (int i = 0; i < requisiteIds.size(); i++) {

@@ -1,14 +1,59 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <!-- Подключаем необходимые стили и шрифты -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Montserrat:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .navbar-brand {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 1.5rem;
+        }
+        .navbar-nav .nav-link {
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+        .navbar-nav .nav-link.active {
+            font-weight: 700;
+            color: #ffc107 !important;
+        }
+        .navbar-text {
+            font-weight: 500;
+        }
+        .navbar {
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+.nav-link {
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+    opacity: 0.8;
+}
+
+.navbar-dark .navbar-nav .nav-link.active {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+}
+    </style>
 </head>
 <body>
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
     <div class="container">
-        <!-- Логотип — ссылка на главную -->
-        <a class="navbar-brand" th:href="@{/}" th:text="'Театр — ' + ${username}">Театр</a>
+        <a class="navbar-brand" th:href="@{/}" th:text="'Театр — Это Жизнь' ">Театр</a>
 
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Переключатель навигации">
@@ -19,7 +64,7 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{/workers}">
-                        <i class="fas fa-users"></i> Наши актёры
+                        <i class="fas fa-users"></i> Сотрудники
                     </a>
                 </li>
                 <li class="nav-item">
@@ -37,17 +82,21 @@
                         <i class="fas fa-theater-masks"></i> Спектакли
                     </a>
                 </li>
-                <!-- Вот тут кнопка Репертуар добавлена -->
                 <li class="nav-item">
                     <a class="nav-link" th:href="@{/repertoire}">
                         <i class="fas fa-book-open"></i> Репертуар
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/conditions}">
+                        <i class="fas fa-clipboard-check"></i> Состояния
+                    </a>
+                </li>
             </ul>
 
             <span class="navbar-text me-3">
-                <i class="fas fa-user-tag me-1"></i> Роль: <strong th:text="${role}">[роль]</strong>
-            </span>
+                    <i class="fas fa-user-tag me-1"></i> Роль: <strong th:text="${role}">[роль]</strong>
+                </span>
 
             <a class="btn btn-outline-danger" th:href="@{/logout}">
                 <i class="fas fa-sign-out-alt me-1"></i> Выход
@@ -56,5 +105,7 @@
     </div>
 </nav>
 
+<!-- Подключаем Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
